@@ -126,6 +126,6 @@ class PendulumEnv extends AbstractEnv
 
     public function angle_normalize($x)
     {
-        return (($x + M_PI) % (2 * M_PI)) - M_PI;
+        return $this->remainder(($x + M_PI) , (2 * M_PI)) - M_PI;
     }
 }

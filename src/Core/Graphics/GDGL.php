@@ -146,6 +146,7 @@ class GDGL
 
     protected function renderPolygon($numVertex)
     {
+        $php81 = (version_compare(phpversion(),'8.1.0')>=0);
         if($numVertex===null) {
             $numVertex=count($this->points);
         }
@@ -158,7 +159,11 @@ class GDGL
             $points[] = $point[1];
             $numPoints++;
             if($numPoints>=$numVertex) {
-                imagefilledpolygon($this->gd,$points,$numPoints,$color);
+                if($php81) {
+                    imagefilledpolygon($this->gd,$points,$color);
+                } else {
+                    imagefilledpolygon($this->gd,$points,$numPoints,$color);
+                }
                 $points = [];
                 $numPoints = 0;
             }
@@ -181,8 +186,8 @@ class GDGL
 
         [$trans,$rotate,$scale] = $this->rotationalDecomposition();
         $flip = [1,1,1];
-        $dstw = (int)(abs($scale[0])*$width);
-        $dsth = (int)(abs($scale[1])*$height);
+        $dstw = (int)ceil(abs($scale[0])*$width);
+        $dsth = (int)ceil(abs($scale[1])*$height);
         if($imgsx!=$dstw||$imgsy!=$dsth) {
             $newImg = imagecreatetruecolor($dstw,$dsth);
             imagealphablending($newImg,false);
@@ -234,8 +239,8 @@ class GDGL
 
         //$dst_center = $this->realCoordinate([$centerx,$centery,0.0]);
         $dst_center = $this->realCoordinate([0.0,0.0,0.0]);
-        $dst_center[0] = $dst_center[0]-$imgsx/2;
-        $dst_center[1] = $dst_center[1]-$imgsy/2;
+        $dst_center[0] = $dst_center[0]-(int)floor($imgsx/2);
+        $dst_center[1] = $dst_center[1]-(int)floor($imgsy/2);
 
         imagecopy(
             $this->gd,$img,
