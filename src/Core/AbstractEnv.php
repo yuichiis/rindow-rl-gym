@@ -188,7 +188,7 @@ abstract class AbstractEnv implements Environment
         return [$seed];
     }
 
-    public function remainder(float $x, float $y) : float
+    protected function remainder(float $x, float $y) : float
     {
         $v = floor($x / $y);
         $r = $x - $v*$y;
