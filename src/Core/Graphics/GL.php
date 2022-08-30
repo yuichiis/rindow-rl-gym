@@ -25,4 +25,34 @@ interface GL
     /* BlendingFactorDest */
     const GL_SRC_ALPHA                    = 0x0302;
     const GL_ONE_MINUS_SRC_ALPHA          = 0x0303;
+
+    public function glBegin(int $mode) : void;
+    public function glEnd() : void;
+    public function renderImage(
+        Image $image, float $centerx, float $centery, float $width, float $height) : void;
+    public function glVertex2f(float $x, float $y) : void;
+    public function glVertex3f(float $x, float $y, float $z) : void;
+    public function glEnable(int $cap) : void;
+    public function glDisable(int $cap) : void;
+    public function glBlendFunc(int $sfactor, int $dfactor) : void;
+    public function glColor4f(float $red, float $green, float $blue, float $alpha) : void;
+    public function glClearColor(float $red, float $green, float $blue, float $alpha) : void;
+    public function glLineStipple(int $factor, int $pattern) : void;
+    public function glLineWidth(float $width) : void;
+    public function glPushMatrix() : void;
+    public function glPopMatrix() : void;
+    public function glTranslatef(float $x, float $y, float $z) : void;
+    public function glRotatef(float $angle, float $x, float $y, float $z) : void;
+    public function glScalef(float $x,float $y,float $z) : void;
+
+    //public function get_display($display);
+    //public function get_window($width, $height, $display);
+    //public function clear() : void;
+    //public function flip() : void;
+    //public function load_image($fname);
+    //public function output();
+    //public function get_image_data();
+    //public function show(bool $loop=null,int $delay=null) : void;
+    //public function handler();
+    //public function close() : void;
 }

@@ -6,7 +6,7 @@ use RuntimeException;
 use Interop\Polite\Math\Matrix\NDArray;
 use Rindow\Math\Matrix\NDArrayPhp;
 
-class GDGL
+class GDGL implements GL
 {
     const DEG2RAD = 0.017453292519943;
 
@@ -43,13 +43,13 @@ class GDGL
     * GL_LINES
     * GL_POINTS
     **/
-    public function glBegin(int $mode)
+    public function glBegin(int $mode) : void
     {
         $this->mode = $mode;
         $this->points = [];
     }
 
-    public function glEnd()
+    public function glEnd() : void
     {
         switch($this->mode) {
             case GL::GL_POINTS: {
@@ -170,7 +170,7 @@ class GDGL
         }
     }
 
-    public function renderImage(Image $image, float $centerx, float $centery, float $width, float $height)
+    public function renderImage(Image $image, float $centerx, float $centery, float $width, float $height) : void
     {
         // *** CAUTION ***
         // $centerx, $centery are not supported.
@@ -250,7 +250,7 @@ class GDGL
         );
     }
 
-    public function rotationalDecomposition()
+    protected function rotationalDecomposition()
     {
         $la = $this->la;
         $trans = $la->gemv($this->currentMatrix,$la->array([0,0,0,1]));
@@ -319,12 +319,12 @@ class GDGL
         return [$trans,$th,$scale,$flags];
     }
 
-    public function glVertex2f(float $x, float $y)
+    public function glVertex2f(float $x, float $y) : void
     {
         $this->points[] = [$x, $y, 0];
     }
 
-    public function glVertex3f(float $x, float $y, float $z)
+    public function glVertex3f(float $x, float $y, float $z) : void
     {
         $this->points[] = [$x, $y, $z];
     }
@@ -333,7 +333,7 @@ class GDGL
     * GL_LINE_STIPPLE
     * GL_BLEND
     */
-    public function glEnable(int $cap)
+    public function glEnable(int $cap) : void
     {
         $this->cap[$cap] = true;
         switch($cap) {
@@ -347,7 +347,7 @@ class GDGL
     /**
     * GL_LINE_STIPPLE
     */
-    public function glDisable(int $cap)
+    public function glDisable(int $cap) : void
     {
         unset($this->cap[$cap]);
         switch($cap) {
@@ -362,7 +362,7 @@ class GDGL
     * GL_SRC_ALPHA
     * GL_ONE_MINUS_SRC_ALPHA
     */
-    public function glBlendFunc(int $sfactor, int $dfactor)
+    public function glBlendFunc(int $sfactor, int $dfactor) : void
     {
         $this->blendSrcFactor = $sfactor;
         $this->blendDstFactor = $dfactor;
@@ -386,40 +386,42 @@ class GDGL
         ];
     }
 
-    public function glColor4f(float $red, float $green, float $blue, float $alpha)
+    public function glColor4f(float $red, float $green, float $blue, float $alpha) : void
     {
         $this->color = $this->transColor($red, $green, $blue, $alpha);
     }
 
-    public function glClearColor(float $red, float $green, float $blue, float $alpha)
+    public function glClearColor(float $red, float $green, float $blue, float $alpha) : void
     {
         $this->clearColor = $this->transColor($red, $green, $blue, $alpha);
     }
 
-    public function glLineStipple(int $factor, int $pattern)
+    public function glLineStipple(int $factor, int $pattern) : void
     {
+        $fg = imagecolorallocatealpha($this->gd,...$this->color);
+        $bg = imagecolorallocatealpha($this->gd,...$this->clearColor);
         $style = [];
         for($b=0;$b<16;$b++) {
             for($n=0;$n<$factor;$n++) {
-                $style[] = ($pattern&0x0001)?$this->color:$this->clearColor;
+                $style[] = ($pattern&0x0001)?$fg:$bg;
             }
             $pattern = $pattern >> 1;
         }
         imagesetstyle($this->gd,$style);
     }
 
-    public function glLineWidth(float $width)
+    public function glLineWidth(float $width) : void
     {
         $width = (int)ceil($width);
         imagesetthickness($this->gd,$width);
     }
 
-    public function glPushMatrix()
+    public function glPushMatrix() : void
     {
         array_push($this->stackMatrix,$this->currentMatrix);
     }
 
-    public function glPopMatrix()
+    public function glPopMatrix() : void
     {
         if(count($this->stackMatrix)==0) {
             throw new LogicException('Matrix Stack is empty');
@@ -427,7 +429,7 @@ class GDGL
         $this->currentMatrix = array_pop($this->stackMatrix);
     }
 
-    public function glTranslatef(float $x, float $y, float $z)
+    public function glTranslatef(float $x, float $y, float $z) : void
     {
         $la = $this->la;
         $trans = $la->array([
@@ -439,7 +441,7 @@ class GDGL
         $this->currentMatrix = $la->gemm($this->currentMatrix,$trans);
     }
 
-    public function glRotatef(float $angle, float $x, float $y, float $z)
+    public function glRotatef(float $angle, float $x, float $y, float $z) : void
     {
         $la = $this->la;
         $angle = $angle*self::DEG2RAD;
@@ -454,7 +456,7 @@ class GDGL
         $this->currentMatrix = $la->gemm($this->currentMatrix,$rotate);
     }
 
-    public function glScalef(float $x,float $y,float $z)
+    public function glScalef(float $x,float $y,float $z) : void
     {
         $la = $this->la;
         $scale = $la->array([
@@ -485,7 +487,7 @@ class GDGL
         return new Window($this, $width, $height, $display);
     }
 
-    public function clear()
+    public function clear() : void
     {
         $c = $this->clearColor;
         $color = imagecolorallocate($this->gd,$c[0],$c[1],$c[2]);
@@ -493,7 +495,7 @@ class GDGL
             $color);
     }
 
-    public function flip()
+    public function flip() : void
     {
         imageflip($this->gd,IMG_FLIP_VERTICAL);
     }
@@ -578,7 +580,7 @@ class GDGL
         return $img;
     }
 
-    public function show(bool $loop=null,int $delay=null)
+    public function show(bool $loop=null,int $delay=null) : void
     {
         if(count($this->outputFiles)==0) {
             throw new LogicException('Image not found');
@@ -629,7 +631,7 @@ class GDGL
         return $this->gd;
     }
 
-    public function close()
+    public function close() : void
     {
         imagedestroy($this->gd);
     }
