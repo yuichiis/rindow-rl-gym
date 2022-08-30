@@ -39,7 +39,7 @@ abstract class AbstractEnv implements Environment
         return $this->maxEpisodeSteps;
     }
 
-    public function rewardThreshold() : int
+    public function rewardThreshold() : float
     {
         return $this->rewardThreshold;
     }
