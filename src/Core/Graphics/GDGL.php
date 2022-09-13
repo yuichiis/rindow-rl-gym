@@ -31,6 +31,7 @@ class GDGL implements GL
     protected $skipRunViewer=false;
     protected $blendSrcFactor;
     protected $blendDstFactor;
+    protected $isExistTempDir = false;
 
     public function __construct($la)
     {
@@ -518,10 +519,13 @@ class GDGL implements GL
 
     protected function outputFile() : string
     {
-        $filename = sys_get_temp_dir().'/rindow/rlgym';
-        if(!file_exists($filename)) {
-            @mkdir($filename,true);
+        if(!$this->isExistTempDir) {
+            if(!file_exists($filename)) {
+                @mkdir($filename,0777,true);
+            }
+            $this->isExistTempDir = true;
         }
+        $filename = sys_get_temp_dir().'/rindow/rlgym';
         $filename = tempnam($filename,'plo');
         rename($filename, $filename.'.gif');
         $filename = $filename.'.gif';
