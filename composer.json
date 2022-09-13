@@ -3,7 +3,7 @@
     "type": "library",
     "description": "A toolkit for developing and comparing reinforcement learning algorithms.",
     "keywords": ["rindow","reinforcement","reinforcement learning","machine learning","rl","ml"],
-    "license": "BSD-3-Clause",
+    "license": "MIT",
     "require": {
         "php": "^8.0|^8.1",
         "interop-phpobjects/polite-ai": "*",
@@ -11,7 +11,7 @@
     },
     "require-dev": {
         "ext-gd": "*",
-        "rindow/rindow-math-plot": "~1.0.6"
+        "rindow/rindow-math-plot": "~1.0.7"
     },
     "suggest": {
         "ext-rindow_openblas": "0.3.0 strongly recommended for speed"
