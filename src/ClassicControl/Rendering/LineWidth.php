@@ -4,7 +4,7 @@
     Click here for the original source code.
     https://github.com/openai/gym/blob/master/gym/envs/classic_control/rendering.py
 */
-namespace Rindow\RL\Gym\Core\Rendering;
+namespace Rindow\RL\Gym\ClassicControl\Rendering;
 
 class LineWidth extends Attr
 {

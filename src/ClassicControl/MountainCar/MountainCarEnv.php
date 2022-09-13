@@ -55,10 +55,11 @@ use Interop\Polite\Math\Matrix\NDArray;
 use Rindow\RL\Gym\Core\AbstractEnv;
 use Rindow\RL\Gym\Core\Spaces\Discrete;
 use Rindow\RL\Gym\Core\Spaces\Box;
+use Rindow\RL\Gym\ClassicControl\Rendering\RenderFactory;
 
 class MountainCarEnv extends AbstractEnv
 {
-    // metadata = {"render.modes": ["human", "rgb_array"], "video.frames_per_second": 30}
+    protected $metadata = ["render.modes"=> ["human", "rgb_array"], "video.frames_per_second"=> 30];
 
     protected $min_position = -1.2;
     protected $max_position = 0.6;
@@ -71,9 +72,16 @@ class MountainCarEnv extends AbstractEnv
     protected $high;
     protected $state;
 
-    public function __construct($la, int $goal_velocity=0)
+    public function __construct(object $la, int $goal_velocity=0, array $metadata=null, object $renderer=null)
     {
         parent::__construct($la);
+        if($metadata) {
+            $this->mergeMetadata($metadata);
+        }
+        if($renderer===null) {
+            $renderer = new RenderFactory($la,'gd',$this->metadata);
+        }
+        $this->renderingFactory = $renderer;
         $this->goal_velocity = $goal_velocity;
         $this->low = $la->array([$this->min_position, -$this->max_speed], NDArray::float32);
         $this->high = $la->array([$this->max_position, $this->max_speed], NDArray::float32);

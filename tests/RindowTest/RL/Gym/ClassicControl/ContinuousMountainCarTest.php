@@ -21,11 +21,18 @@ class Test extends TestCase
         return $mo->la();
     }
 
+    public function getMetadata()
+    {
+        return [
+            'render.skipCleaning' => true,
+        ];
+    }
+
     public function testBasic()
     {
         $mo = $this->newMatrixOperator();
         $la = $this->newLa($mo);
-        $env = new ContinuousMountainCarV0($la);
+        $env = new ContinuousMountainCarV0($la,metadata:$this->getMetadata());
 
         // maxEpisodeSteps, rewardThreshold
         $this->assertEquals(999,$env->maxEpisodeSteps());
@@ -79,7 +86,7 @@ class Test extends TestCase
     {
         $mo = $this->newMatrixOperator();
         $la = $this->newLa($mo);
-        $env = new ContinuousMountainCarV0($la);
+        $env = new ContinuousMountainCarV0($la,metadata:$this->getMetadata());
 
         $env->reset();
         $env->render();

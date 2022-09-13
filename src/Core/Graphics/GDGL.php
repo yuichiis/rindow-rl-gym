@@ -28,13 +28,21 @@ class GDGL implements GL
     protected $cap = [];
     protected $outputFiles = [];
     protected $gifViewer = 'RINDOW_MATH_PLOT_VIEWER';
-    protected $skipRunViewer=false;
     protected $blendSrcFactor;
     protected $blendDstFactor;
-    protected $isExistTempDir = false;
+    protected $imagesDir;
+    protected $mkdir;
+    protected $skipCleaning = false;
+    protected $skipRunViewer = false;
 
-    public function __construct($la)
+    public function __construct($la,$config=null)
     {
+        $this->imagesDir = sys_get_temp_dir().'/rindow/rlgym';
+        $this->setConfig($config);
+        if(!$this->skipCleaning) {
+            $this->cleanUp();
+        }
+
         $this->la = $la;
         $this->currentMatrix = $la->array([
             [1,0,0,0],
@@ -42,6 +50,28 @@ class GDGL implements GL
             [0,0,1,0],
             [0,0,0,1],
         ]);
+    }
+
+    protected function setConfig($config) : void
+    {
+        //var_dump($config);
+        if(isset($config['render.skipCleaning']) && $config['render.skipCleaning']) {
+            $this->setSkipCleaningUp(true);
+        }
+        if(isset($config['render.skipRunViewer']) && $config['render.skipRunViewer']) {
+            $this->setSkipRunViewer(true);
+        }
+        
+    }
+
+    public function setSkipCleaningUp(bool $switch) : void
+    {
+        $this->skipCleaning = $switch;
+    }
+
+    public function setSkipRunViewer(bool $switch) : void
+    {
+        $this->skipRunViewer = $switch;
     }
 
     public function glViewport(int $orginX, int $orginY, int $width, int $height)
@@ -517,21 +547,6 @@ class GDGL implements GL
         return $image;
     }
 
-    protected function outputFile() : string
-    {
-        $filename = sys_get_temp_dir().'/rindow/rlgym';
-        if(!$this->isExistTempDir) {
-            if(!file_exists($filename)) {
-                @mkdir($filename,0777,true);
-            }
-            $this->isExistTempDir = true;
-        }
-        $filename = tempnam($filename,'plo');
-        rename($filename, $filename.'.gif');
-        $filename = $filename.'.gif';
-        return $filename;
-    }
-
     public function output() : string
     {
         $fname = $this->outputFile();
@@ -631,8 +646,11 @@ class GDGL implements GL
         $this->executeGifViewer($filename);
     }
 
-    protected function executeGifViewer($filename)
+    protected function executeGifViewer($filename) : void
     {
+        if($this->skipRunViewer) {
+            return;
+        }
         if($viewer = getenv($this->gifViewer)) {
             $filename = '"'.$viewer.'" '.$filename;
         }
@@ -654,5 +672,48 @@ class GDGL implements GL
     public function currentMatrix() : NDArray
     {
         return $this->currentMatrix;
+    }
+
+    public function cleanUp() : void
+    {
+        $this->deleteTempfiles('plo');
+    }
+
+    protected function outputFile() : string
+    {
+        $imagedir = sys_get_temp_dir().'/rindow/rlgym';
+        $this->makeDirectory();
+        $filename = tempnam($this->imagesDir,'plo');
+        rename($filename, $filename.'.gif');
+        $filename = $filename.'.gif';
+        return $filename;
+    }
+
+    protected function makeDirectory() : void
+    {
+        if($this->mkdir) {
+            return;
+        }
+        if(!file_exists($this->imagesDir)) {
+            @mkdir($this->imagesDir,0777,true);
+        }
+        $this->mkdir = true;
+    }
+
+    protected function deleteTempfiles(string $prefix) : void
+    {
+        $this->makeDirectory();
+        if(($d=opendir($this->imagesDir))==false) {
+            return;
+        }
+
+        $pattern = '/^'.$prefix.'.*\\.gif$/';
+        while ($filename=readdir($d)) {
+            if(is_file($this->imagesDir.'/'.$filename) &&
+                    preg_match($pattern,$filename)) {
+                unlink($this->imagesDir.'/'.$filename);
+            }
+        }
+        closedir($d);
     }
 }

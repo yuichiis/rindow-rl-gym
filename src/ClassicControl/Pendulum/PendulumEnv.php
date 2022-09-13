@@ -16,11 +16,12 @@ use Interop\Polite\Math\Matrix\NDArray;
 use Rindow\RL\Gym\Core\AbstractEnv;
 use Rindow\RL\Gym\Core\Spaces\Discrete;
 use Rindow\RL\Gym\Core\Spaces\Box;
+use Rindow\RL\Gym\ClassicControl\Rendering\RenderFactory;
 
 
 class PendulumEnv extends AbstractEnv
 {
-    // metadata = {"render.modes": ["human", "rgb_array"], "video.frames_per_second": 30}
+    protected $metadata = ["render.modes"=> ["human", "rgb_array"], "video.frames_per_second"=> 30];
 
     protected $max_speed = 8;
     protected $max_torque = 2.0;
@@ -30,9 +31,16 @@ class PendulumEnv extends AbstractEnv
     protected $g;
     protected $state;
 
-    public function __construct($la, $g=10.0)
+    public function __construct(object $la, $g=10.0, array $metadata=null, object $renderer=null)
     {
         parent::__construct($la);
+        if($metadata) {
+            $this->mergeMetadata($metadata);
+        }
+        if($renderer===null) {
+            $renderer = new RenderFactory($la,'gd',$this->metadata);
+        }
+        $this->renderingFactory = $renderer;
         $this->g = $g;
 
         $this->setActionSpace(new Box($la,

@@ -1,5 +1,5 @@
 <?php
-namespace Rindow\RL\Gym\Core\Rendering;
+namespace Rindow\RL\Gym\ClassicControl\Rendering;
 
 use Rindow\RL\Gym\Core\Graphics\GDGL;
 
@@ -10,11 +10,13 @@ class RenderFactory
     ];
     protected $la;
     protected $driverName;
+    protected $metadata;
 
-    public function __construct($la,$driverName)
+    public function __construct($la,$driverName,$metadata=null)
     {
         $this->la = $la;
         $this->driverName = $driverName;
+        $this->metadata = $metadata;
     }
 
     public function factory()
@@ -23,7 +25,7 @@ class RenderFactory
         if(isset($this->drivers[$driverName])) {
             $driverName = $this->drivers[$driverName];
         }
-        $driver = new $driverName($this->la);
+        $driver = new $driverName($this->la, config:$this->metadata);
         $rendering = new Rendering($driver);
         return $rendering;
     }

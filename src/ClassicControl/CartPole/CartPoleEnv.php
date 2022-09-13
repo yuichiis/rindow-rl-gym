@@ -60,10 +60,11 @@ use Interop\Polite\Math\Matrix\NDArray;
 use Rindow\RL\Gym\Core\AbstractEnv;
 use Rindow\RL\Gym\Core\Spaces\Discrete;
 use Rindow\RL\Gym\Core\Spaces\Box;
+use Rindow\RL\Gym\ClassicControl\Rendering\RenderFactory;
 
 class CartPoleEnv extends AbstractEnv
 {
-    // metadata = {"render.modes": ["human", "rgb_array"], "video.frames_per_second": 50}
+    protected $metadata = ["render.modes"=> ["human", "rgb_array"], "video.frames_per_second"=> 50];
 
     protected $gravity = 9.8;
     protected $masscart = 1.0;
@@ -79,9 +80,16 @@ class CartPoleEnv extends AbstractEnv
     protected $state;
     protected $steps_beyond_done;
 
-    public function __construct($la)
+    public function __construct(object $la, array $metadata=null, object $renderer=null)
     {
         parent::__construct($la);
+        if($metadata) {
+            $this->mergeMetadata($metadata);
+        }
+        if($renderer===null) {
+            $renderer = new RenderFactory($la,'gd',$this->metadata);
+        }
+        $this->renderingFactory = $renderer;
         $this->total_mass = $this->masspole + $this->masscart;
         $this->polemass_length = $this->masspole * $this->length;
 

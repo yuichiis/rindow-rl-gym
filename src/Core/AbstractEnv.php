@@ -7,7 +7,6 @@ use InvalidArgumentException;
 use Throwable;
 use Interop\Polite\AI\RL\Environment;
 use Interop\Polite\Math\Matrix\NDArray;
-use Rindow\RL\Gym\Core\Rendering\RenderFactory;
 use Rindow\RL\Gym\Core\Spaces\Space;
 
 abstract class AbstractEnv implements Environment
@@ -22,16 +21,12 @@ abstract class AbstractEnv implements Environment
     protected $elapsedSteps = 0;
     protected $rewardThreshold = 0;   //  N/A
     protected $la;
-    protected $renderingFactory;
     protected $viewer;
+    protected $metadata = [];
 
-    public function __construct($la,$render=null)
+    public function __construct($la)
     {
         $this->la = $la;
-        if($render===null) {
-            $render = new RenderFactory($la,'gd');
-        }
-        $this->renderingFactory = $render;
     }
 
     public function maxEpisodeSteps() : int
@@ -52,6 +47,11 @@ abstract class AbstractEnv implements Environment
     public function actionSpace() : mixed
     {
         return $this->actionSpace;
+    }
+
+    protected function mergeMetadata(array $metadata) : void
+    {
+        $this->metadata = array_replace_recursive($this->metadata,$metadata);
     }
 
     /**

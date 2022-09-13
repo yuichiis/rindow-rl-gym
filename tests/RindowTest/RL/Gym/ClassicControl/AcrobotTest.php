@@ -21,11 +21,18 @@ class Test extends TestCase
         return $mo->la();
     }
 
+    public function getMetadata()
+    {
+        return [
+            'render.skipCleaning' => true,
+        ];
+    }
+
     public function testBasic()
     {
         $mo = $this->newMatrixOperator();
         $la = $this->newLa($mo);
-        $env = new AcrobotV1($la);
+        $env = new AcrobotV1($la,metadata:$this->getMetadata());
 
         // maxEpisodeSteps, rewardThreshold
         $this->assertEquals(500,$env->maxEpisodeSteps());
@@ -77,7 +84,7 @@ class Test extends TestCase
     {
         $mo = $this->newMatrixOperator();
         $la = $this->newLa($mo);
-        $env = new AcrobotV1($la);
+        $env = new AcrobotV1($la,metadata:$this->getMetadata());
 
         $env->reset();
         $env->render();

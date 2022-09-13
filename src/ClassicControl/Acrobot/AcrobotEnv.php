@@ -60,10 +60,11 @@ use Interop\Polite\Math\Matrix\NDArray;
 use Rindow\RL\Gym\Core\AbstractEnv;
 use Rindow\RL\Gym\Core\Spaces\Discrete;
 use Rindow\RL\Gym\Core\Spaces\Box;
+use Rindow\RL\Gym\ClassicControl\Rendering\RenderFactory;
 
 class AcrobotEnv extends AbstractEnv
 {
-    // metadata = {"render.modes": ["human", "rgb_array"], "video.frames_per_second": 15}
+    protected $metadata = ["render.modes"=> ["human", "rgb_array"], "video.frames_per_second"=> 15];
 
     public $dt = 0.2;
     const LINK_LENGTH_1 = 1.0;  # [m]
@@ -89,9 +90,18 @@ class AcrobotEnv extends AbstractEnv
 
     protected $state;
 
-    public function __construct($la)
+    protected $renderingFactory;
+
+    public function __construct(object $la, array $metadata=null, object $renderer=null)
     {
         parent::__construct($la);
+        if($metadata) {
+            $this->mergeMetadata($metadata);
+        }
+        if($renderer===null) {
+            $renderer = new RenderFactory($la,'gd',$this->metadata);
+        }
+        $this->renderingFactory = $renderer;
         $high = $la->array(
             [1.0, 1.0, 1.0, 1.0, self::MAX_VEL_1, self::MAX_VEL_2], NDArray::float32
         );

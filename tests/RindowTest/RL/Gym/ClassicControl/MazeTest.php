@@ -1,11 +1,11 @@
 <?php
-namespace RindowTest\RL\Gym\MazeTest;
+namespace RindowTest\RL\Gym\ClassicControl\MazeTest;
 
 use PHPUnit\Framework\TestCase;
 use Interop\Polite\Math\Matrix\NDArray;
 use Interop\Polite\AI\RL\Environment;
 use Rindow\Math\Matrix\MatrixOperator;
-use Rindow\RL\Gym\Maze\Maze;
+use Rindow\RL\Gym\ClassicControl\Maze\Maze;
 use Rindow\RL\Gym\Core\Spaces\Box;
 use Rindow\RL\Gym\Core\Spaces\Discrete;
 
@@ -19,6 +19,13 @@ class Test extends TestCase
     public function newLa($mo)
     {
         return $mo->la();
+    }
+
+    public function getMetadata()
+    {
+        return [
+            'render.skipCleaning' => true,
+        ];
     }
 
     public function newRules($la)
@@ -44,7 +51,7 @@ class Test extends TestCase
         $mo = $this->newMatrixOperator();
         $la = $this->newLa($mo);
         [$mazeRules,$width,$height,$exit] = $this->newRules($la);
-        $env = new Maze($la,$mazeRules,$width,$height,$exit,$throw=true,$maxEpisodeSteps=100);
+        $env = new Maze($la,$mazeRules,$width,$height,$exit,$throw=true,$maxEpisodeSteps=100,metadata:$this->getMetadata());
 
         // maxEpisodeSteps, rewardThreshold
         $this->assertEquals(100,$env->maxEpisodeSteps());
@@ -96,7 +103,7 @@ class Test extends TestCase
         $mo = $this->newMatrixOperator();
         $la = $this->newLa($mo);
         [$mazeRules,$width,$height,$exit] = $this->newRules($la);
-        $env = new Maze($la,$mazeRules,$width,$height,$exit,$throw=true,$maxEpisodeSteps=100);
+        $env = new Maze($la,$mazeRules,$width,$height,$exit,$throw=true,$maxEpisodeSteps=100,metadata:$this->getMetadata());
 
         $env->reset();
         $env->render();

@@ -1,5 +1,5 @@
 <?php
-namespace Rindow\RL\Gym\MultiarmedBandit;
+namespace Rindow\RL\Gym\ClassicControl\MultiarmedBandit;
 
 use Rindow\RL\Gym\Core\AbstractEnv;
 use Rindow\RL\Gym\Core\Spaces\Discrete;
@@ -10,9 +10,12 @@ class Slots extends AbstractEnv
     protected $thresholds = []; // List<int>
     protected $num;
 
-    public function __construct($la,array $probabilities)
+    public function __construct(object $la,array $probabilities, array $metadata=null)
     {
         parent::__construct($la);
+        if($metadata) {
+            $this->mergeMetadata($metadata);
+        }
         $this->p = $probabilities;
         foreach ($probabilities as $p) {
             $this->thresholds[] = (int)floor($p * getrandmax());

@@ -1,5 +1,5 @@
 <?php
-namespace RindowTest\RL\Gym\Core\Rendering\ViewerTest;
+namespace RindowTest\RL\Gym\ClassicControl\Rendering\ViewerTest;
 
 use PHPUnit\Framework\TestCase;
 use Interop\Polite\Math\Matrix\NDArray;
@@ -7,8 +7,8 @@ use Rindow\Math\Matrix\MatrixOperator;
 use Rindow\Math\Plot\Plot;
 use Rindow\RL\Gym\Core\Graphics\GDGL;
 use Rindow\RL\Gym\Core\Graphics\GL;
-use Rindow\RL\Gym\Core\Rendering\Rendering;
-use Rindow\RL\Gym\Core\Rendering\RenderFactory;
+use Rindow\RL\Gym\ClassicControl\Rendering\Rendering;
+use Rindow\RL\Gym\ClassicControl\Rendering\RenderFactory;
 
 class Test extends TestCase
 {
@@ -22,9 +22,16 @@ class Test extends TestCase
         return $mo->la();
     }
 
+    public function getMetadata()
+    {
+        return [
+            'render.skipCleaning' => true,
+        ];
+    }
+
     public function newRendering($la)
     {
-        $factory = new RenderFactory($la,'gd');
+        $factory = new RenderFactory($la,'gd',metadata:$this->getMetadata());
         return $factory->factory();
     }
 

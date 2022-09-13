@@ -1,8 +1,9 @@
 <?php
-namespace Rindow\RL\Gym\Maze;
+namespace Rindow\RL\Gym\ClassicControl\Maze;
 
 use Rindow\RL\Gym\Core\AbstractEnv;
 use Rindow\RL\Gym\Core\Spaces\Discrete;
+use Rindow\RL\Gym\ClassicControl\Rendering\RenderFactory;
 use Interop\Polite\Math\Matrix\NDArray;
 use InvalidArgumentException;
 use RuntimeException;
@@ -10,6 +11,8 @@ use LogicException;
 
 class Maze extends AbstractEnv
 {
+    protected $metadata = ["render.modes"=> ["human", "rgb_array"], "video.frames_per_second"=> 50];
+
     const UP    = 0;
     const DOWN  = 1;
     const RIGHT = 2;
@@ -22,11 +25,19 @@ class Maze extends AbstractEnv
     protected $observation;
     protected $throwInvalidAction = true;
 
-    public function __construct($la,NDArray $policy,
+    public function __construct(object $la,NDArray $policy,
         int $width,int $height,int $exit,
-        int $throwInvalidAction=null,int $maxEpisodeSteps=null)
+        int $throwInvalidAction=null,int $maxEpisodeSteps=null,
+        array $metadata=null, object $renderer=null)
     {
         parent::__construct($la);
+        if($metadata) {
+            $this->mergeMetadata($metadata);
+        }
+        if($renderer===null) {
+            $renderer = new RenderFactory($la,'gd',$this->metadata);
+        }
+        $this->renderingFactory = $renderer;
         if($policy->ndim()!=2) {
             throw new InvalidArgumentException('policy must be 2D NDArray');
         }

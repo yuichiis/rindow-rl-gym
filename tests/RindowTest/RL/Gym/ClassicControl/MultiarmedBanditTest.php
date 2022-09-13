@@ -1,11 +1,11 @@
 <?php
-namespace RindowTest\RL\Gym\MultiarmedBanditTest;
+namespace RindowTest\RL\Gym\ClassicControl\MultiarmedBanditTest;
 
 use PHPUnit\Framework\TestCase;
 use Interop\Polite\Math\Matrix\NDArray;
 use Interop\Polite\AI\RL\Environment;
 use Rindow\Math\Matrix\MatrixOperator;
-use Rindow\RL\Gym\MultiarmedBandit\Slots;
+use Rindow\RL\Gym\ClassicControl\MultiarmedBandit\Slots;
 use Rindow\RL\Gym\Core\Spaces\Box;
 use Rindow\RL\Gym\Core\Spaces\Discrete;
 
@@ -28,12 +28,19 @@ class Test extends TestCase
         return [0.25,0.25,0.0,0.5];
     }
 
+    public function getMetadata()
+    {
+        return [
+            'render.skipCleaning' => true,
+        ];
+    }
+
     public function testBasic()
     {
         $mo = $this->newMatrixOperator();
         $la = $this->newLa($mo);
         $probs = $this->newProbs();
-        $env = new Slots($la,$probs);
+        $env = new Slots($la,$probs,metadata:$this->getMetadata());
 
         // maxEpisodeSteps, rewardThreshold
         $this->assertEquals(0,$env->maxEpisodeSteps());
@@ -76,7 +83,7 @@ class Test extends TestCase
         $mo = $this->newMatrixOperator();
         $la = $this->newLa($mo);
         $probs = $this->newProbs();
-        $env = new Slots($la,$probs);
+        $env = new Slots($la,$probs,metadata:$this->getMetadata());
 
         $env->reset();
 

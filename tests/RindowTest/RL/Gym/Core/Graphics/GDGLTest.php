@@ -20,11 +20,23 @@ class Test extends TestCase
         return $mo->la();
     }
 
+    public function getMetadata()
+    {
+        return [
+            'render.skipCleaning' => true,
+        ];
+    }
+
+    public function newGDGL($la)
+    {
+        return new GDGL($la,config:$this->getMetadata());
+    }
+
     public function testLinesNormal()
     {
         $mo = $this->newMatrixOperator();
         $la = $this->newLa($mo);
-        $gl = new GDGL($la);
+        $gl = $this->newGDGL($la);
 
         $display = $gl->get_display(null);
         $window = $gl->createWindow($width=400, $height=300, $display);
@@ -138,7 +150,7 @@ class Test extends TestCase
     {
         $mo = $this->newMatrixOperator();
         $la = $this->newLa($mo);
-        $gl = new GDGL($la);
+        $gl = $this->newGDGL($la);
 
         $display = $gl->get_display(null);
         $window = $gl->createWindow($width=400, $height=300, $display);
@@ -181,7 +193,7 @@ class Test extends TestCase
     {
         $mo = $this->newMatrixOperator();
         $la = $this->newLa($mo);
-        $gl = new GDGL($la);
+        $gl = $this->newGDGL($la);
 
         $display = $gl->get_display(null);
         $window = $gl->createWindow($width=400, $height=300, $display);
@@ -224,7 +236,7 @@ class Test extends TestCase
     {
         $mo = $this->newMatrixOperator();
         $la = $this->newLa($mo);
-        $gl = new GDGL($la);
+        $gl = $this->newGDGL($la);
 
         $display = $gl->get_display(null);
         $window = $gl->createWindow($width=400, $height=300, $display);
@@ -276,7 +288,7 @@ class Test extends TestCase
     {
         $mo = $this->newMatrixOperator();
         $la = $this->newLa($mo);
-        $gl = new GDGL($la);
+        $gl = $this->newGDGL($la);
 
         $display = $gl->get_display(null);
         $window = $gl->createWindow($width=400, $height=300, $display);
@@ -334,7 +346,7 @@ class Test extends TestCase
     {
         $mo = $this->newMatrixOperator();
         $la = $this->newLa($mo);
-        $gl = new GDGL($la);
+        $gl = $this->newGDGL($la);
 
         $display = $gl->get_display(null);
         $window = $gl->createWindow($width=400, $height=300, $display);
@@ -406,7 +418,7 @@ class Test extends TestCase
         //$this->createImage();
         $mo = $this->newMatrixOperator();
         $la = $this->newLa($mo);
-        $gl = new GDGL($la);
+        $gl = $this->newGDGL($la);
 
         $display = $gl->get_display(null);
         $window = $gl->createWindow($width=600, $height=300, $display);
@@ -491,7 +503,7 @@ class Test extends TestCase
     {
         $mo = $this->newMatrixOperator();
         $la = $this->newLa($mo);
-        $gl = new GDGL($la);
+        $gl = $this->newGDGL($la);
 
         $display = $gl->get_display(null);
         $window = $gl->createWindow($width=400, $height=300, $display);
@@ -583,7 +595,7 @@ class Test extends TestCase
     {
         $mo = $this->newMatrixOperator();
         $la = $this->newLa($mo);
-        $gl = new GDGL($la);
+        $gl = $this->newGDGL($la);
 
         $display = $gl->get_display(null);
         $window = $gl->createWindow($width=400, $height=300, $display);
@@ -639,7 +651,7 @@ class Test extends TestCase
     {
         $mo = $this->newMatrixOperator();
         $la = $this->newLa($mo);
-        $gl = new GDGL($la);
+        $gl = $this->newGDGL($la);
 
         $display = $gl->get_display(null);
         $window = $gl->createWindow($width=100, $height=100, $display);
@@ -673,7 +685,7 @@ class Test extends TestCase
     {
         $mo = $this->newMatrixOperator();
         $la = $this->newLa($mo);
-        $gl = new GDGL($la);
+        $gl = $this->newGDGL($la);
 
         $display = $gl->get_display(null);
         $window = $gl->createWindow($width=100, $height=100, $display);
@@ -696,6 +708,15 @@ class Test extends TestCase
             $gl->output();
         }
         $gl->show(true,100);
+        $this->assertTrue(true);
+    }
+
+    public function testCleanup()
+    {
+        $mo = $this->newMatrixOperator();
+        $la = $this->newLa($mo);
+        $gl = $this->newGDGL($la);
+        $gl->cleanup();
         $this->assertTrue(true);
     }
 }
