@@ -12,19 +12,19 @@ class LineStyle extends Attr
 {
     protected $style;
 
-    public function __construct($gl,$style)
+    public function __construct($gl, int $style)
     {
         parent::__construct($gl);
         $this->style = $style;
     }
 
-    public function enable()
+    public function enable() : void
     {
         $this->gl->glEnable(GL::GL_LINE_STIPPLE);
         $this->gl->glLineStipple(1, $this->style);
     }
 
-    public function disable()
+    public function disable() : void
     {
         $this->gl->glDisable(GL::GL_LINE_STIPPLE);
     }

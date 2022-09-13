@@ -18,7 +18,7 @@ class FilledPolygon extends Geom
         $this->v = $v;
     }
 
-    public function render1()
+    public function render1() : void
     {
         if(count($this->v) == 4) {
             $this->gl->glBegin(GL::GL_QUADS);

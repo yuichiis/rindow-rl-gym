@@ -1,11 +1,11 @@
 <?php
-namespace RindowTest\RL\Gym\MountainCarTest;
+namespace RindowTest\RL\Gym\ClassicControl\CartPoleTest;
 
 use PHPUnit\Framework\TestCase;
 use Interop\Polite\Math\Matrix\NDArray;
 use Interop\Polite\AI\RL\Environment;
 use Rindow\Math\Matrix\MatrixOperator;
-use Rindow\RL\Gym\MountainCar\MountainCarV0;
+use Rindow\RL\Gym\ClassicControl\CartPole\CartPoleV0;
 use Rindow\RL\Gym\Core\Spaces\Box;
 use Rindow\RL\Gym\Core\Spaces\Discrete;
 
@@ -25,18 +25,18 @@ class Test extends TestCase
     {
         $mo = $this->newMatrixOperator();
         $la = $this->newLa($mo);
-        $env = new MountainCarV0($la);
+        $env = new CartPoleV0($la);
 
         // maxEpisodeSteps, rewardThreshold
         $this->assertEquals(200,$env->maxEpisodeSteps());
-        $this->assertEquals(-110.0,$env->rewardThreshold());
+        $this->assertEquals(195.0,$env->rewardThreshold());
 
         // observationSpace
         $obsSpace = $env->observationSpace();
         $this->assertInstanceof(Box::class,$obsSpace);
         $obsShape = $obsSpace->shape();
         $obsDtype = $obsSpace->dtype();
-        $this->assertEquals([2],$obsShape);
+        $this->assertEquals([4],$obsShape);
         $this->assertEquals(NDArray::float32,$obsDtype);
         $this->assertEquals($obsShape,$obsSpace->high()->shape());
         $this->assertEquals($obsDtype,$obsSpace->high()->dtype());
@@ -51,7 +51,7 @@ class Test extends TestCase
         $this->assertEquals([],$actionShape);
         $this->assertEquals(null,$actionDtype);
         $this->assertIsInt($actionSpace->n());
-        $this->assertEquals(3,$actionSpace->n());
+        $this->assertEquals(2,$actionSpace->n());
 
         // reset
         $obs = $env->reset();
@@ -77,17 +77,19 @@ class Test extends TestCase
     {
         $mo = $this->newMatrixOperator();
         $la = $this->newLa($mo);
-        $env = new MountainCarV0($la);
+        $env = new CartPoleV0($la);
 
         $env->reset();
         $env->render();
         $env->show();
-
         $env->reset();
         $env->render();
         for($i=0;$i<10;$i++) {
-            $env->step(0);
+            [$obs,$reward,$done,$info] = $env->step(0);
             $env->render();
+            if($done) {
+                break;
+            }
         }
         $env->show();
         $this->assertTrue(true);

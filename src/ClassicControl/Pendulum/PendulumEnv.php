@@ -7,7 +7,7 @@
 from gym.utils import seeding
 */
 
-namespace Rindow\RL\Gym\Pendulum;
+namespace Rindow\RL\Gym\ClassicControl\Pendulum;
 
 use RuntimeException;
 use InvalidArgumentException;
@@ -83,11 +83,11 @@ class PendulumEnv extends AbstractEnv
         return $la->array([cos($theta), sin($theta), $thetadot], NDArray::float32);
     }
 
-    public function render($mode="human")
+    public function render($mode="human") : mixed
     {
         if($this->viewer === null) {
-            $this->viewer = $this->renderingFactory->Viewer(500, 500);
-            $rendering = $this->viewer->rendering();
+            $rendering = $this->renderingFactory->factory();
+            $this->viewer = $rendering->Viewer(500, 500);
             $this->viewer->set_bounds(-2.2, 2.2, -2.2, 2.2);
             $rod = $rendering->make_capsule(1, 0.2);
             $rod->set_color(0.8, 0.3, 0.3);
@@ -114,14 +114,6 @@ class PendulumEnv extends AbstractEnv
     public function fname()
     {
         return $fname = __DIR__."/assets/clockwise.png";
-    }
-
-    public function close() : void
-    {
-        if($this->viewer) {
-            $this->viewer->close();
-            $this->viewer = null;
-        }
     }
 
     public function angle_normalize($x)

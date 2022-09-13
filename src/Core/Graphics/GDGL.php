@@ -17,7 +17,14 @@ class GDGL implements GL
     protected $gd;
     protected $color;
     protected $clearColor;
+    protected $fgRealColor;
+    protected $bgRealColor;
+    protected $currentLineStippleFactor;
+    protected $currentLineStipplePattern;
+
     protected $mode;
+    protected $prevRealPoint;
+    protected $firstRealPoint;
     protected $cap = [];
     protected $outputFiles = [];
     protected $gifViewer = 'RINDOW_MATH_PLOT_VIEWER';
@@ -36,20 +43,95 @@ class GDGL implements GL
         ]);
     }
 
+    public function glViewport(int $orginX, int $orginY, int $width, int $height)
+    {
+        $this->viewMatrix = $this->la->array([
+            [$width/2, 0,          0, $width/2+$orginX   ],
+            [0,        -$height/2, 0, $this->height-$height/2-$orginY-1],
+            [0,        0,          1, 0                  ],
+            [0,        0,          0, 1                  ],
+        ]);
+        //$la = $this->la;
+        //$rightedge = ($this->width/2-1)/($this->width/2);
+        //$topedge = ($this->height/2-1)/($this->height/2);
+        //$bottom = $la->gemv($this->viewMatrix,$la->array([-1,-1,0,0]));
+        //$top = $la->gemv($this->viewMatrix,$la->array([$rightedge,$topedge,0,0]));
+        //$bottom = $la->astype($bottom,NDArray::int32);
+        //$top = $la->astype($top,NDArray::int32);
+        //echo "bottomview=".implode(',',$bottom->toArray())."\n";
+        //echo "topview=".implode(',',$top->toArray())."\n";
+        $clipx1 = $orginX;
+        $clipy1 = $this->height-$orginY-$height;
+        $clipx2 = $orginX+$width-1;
+        $clipy2 = $this->height-1-$orginY;
+        imagesetclip($this->gd,$clipx1,$clipy1,$clipx2,$clipy2);
+    }
+    
+    protected function realCoordinate(array $point, bool $realMode=null)
+    {
+        $la = $this->la;
+        array_push($point,1);
+        $p = $la->array($point);
+        $p = $la->gemv($this->currentMatrix,$p);
+        if($this->viewMatrix) {
+            $p = $la->gemv($this->viewMatrix,$p);
+        }
+        if(!$realMode) {
+            $p = $la->astype($p,NDArray::int32);
+        }
+        //$p[1] = $this->height - $p[1] - 1;
+        return $p;
+    }
+
+    public function glClear(int $mask) : void
+    {
+        if($mask|GL::GL_COLOR_BUFFER_BIT) {
+            $c = $this->clearColor;
+            $color = imagecolorallocate($this->gd,$c[0],$c[1],$c[2]);
+            imagefilledrectangle($this->gd,0,0,$this->width-1,$this->height-1,
+                $color);
+        }
+    }
+
     /**
     * GL_QUADS
     * GL_POLYGON
     * GL_TRIANGLES
     * GL_LINES
     * GL_POINTS
+    * GL_LINE_STRIP
+    * GL_LINE_LOOP
     **/
     public function glBegin(int $mode) : void
     {
         $this->mode = $mode;
         $this->points = [];
-    }
+        $this->prevRealPoint = null;
+        $this->firstRealPoint = null;
+}
 
     public function glEnd() : void
+    {
+        $this->dispatchPolygon(true);
+        $this->mode = null;
+        $this->points = [];
+        $this->prevRealPoint = null;
+        $this->firstRealPoint = null;
+}
+
+    public function glVertex2f(float $x, float $y) : void
+    {
+        $this->points[] = [$x, $y, 0];
+        $this->dispatchPolygon(false);
+    }
+
+    public function glVertex3f(float $x, float $y, float $z) : void
+    {
+        $this->points[] = [$x, $y, $z];
+        $this->dispatchPolygon(false);
+    }
+
+    protected function dispatchPolygon(bool $done)
     {
         switch($this->mode) {
             case GL::GL_POINTS: {
@@ -62,95 +144,101 @@ class GDGL implements GL
             }
             case GL::GL_LINE_STRIP:
             case GL::GL_LINE_LOOP: {
-                $this->renderLineStrip($this->mode);
+                $this->renderLineStrip($this->mode,$done);
                 break;
             }
             case GL::GL_TRIANGLES: {
-                $this->renderPolygon(3);
+                $this->renderPolygon(3,$done);
                 break;
             }
             case GL::GL_QUADS: {
-                $this->renderPolygon(4);
+                $this->renderPolygon(4,$done);
                 break;
             }
             case GL::GL_POLYGON: {
-                $this->renderPolygon(null);
+                $this->renderPolygon(null,$done);
                 break;
             }
             default: {
                 throw new LogicException('unknown primitive mode');
             }
         }
-        $this->mode = null;
     }
 
-    protected function realColor()
+    protected function currentRealColor()
     {
         if(isset($this->cap[GL::GL_LINE_STIPPLE])) {
             return IMG_COLOR_STYLED;
         }
-        return imagecolorallocatealpha($this->gd,...$this->color);
-    }
-
-    protected function realCoordinate(array $point)
-    {
-        $la = $this->la;
-        array_push($point,1);
-        $p = $la->array($point);
-        $p = $la->gemv($this->currentMatrix,$p);
-        if($this->viewMatrix) {
-            $p = $la->gemv($this->viewMatrix,$p);
-        }
-        $p = $la->astype($p,NDArray::int32);
-        return $p;
+        return $this->fgRealColor;
     }
 
     protected function renderPoint()
     {
-        $color = $this->realColor();
-        while($point = array_shift($this->points)) {
-            $point = $this->realCoordinate($point);
-            imagesetpixel($this->gd,$point[0],$point[1],$color);
+        if(count($this->points)<1) {
+            return;
         }
+        $color = $this->currentRealColor();
+        $point = array_shift($this->points);
+        $point = $this->realCoordinate($point);
+        imagesetpixel($this->gd,$point[0],$point[1],$color);
     }
 
     protected function renderLine()
     {
-        $color = $this->realColor();
-        while($start = array_shift($this->points)) {
-            $start = $this->realCoordinate($start);
-            $end = array_shift($this->points);
-            if($end==null) {
-                break;
-            }
-            $end = $this->realCoordinate($end);
-            imageline($this->gd,$start[0],$start[1],$end[0],$end[1],$color);
+        if(count($this->points)<2) {
+            return;
         }
-    }
-
-    protected function renderLineStrip($mode)
-    {
-        $color = $this->realColor();
+        $color = $this->currentRealColor();
         $start = array_shift($this->points);
+        $end   = array_shift($this->points);
         $start = $this->realCoordinate($start);
-        $last = $start;
-        while($end = array_shift($this->points)) {
-            $end = $this->realCoordinate($end);
-            imageline($this->gd,$start[0],$start[1],$end[0],$end[1],$color);
-            $start = $end;
-        }
-        if($mode==GL::GL_LINE_LOOP) {
-            imageline($this->gd,$start[0],$start[1],$last[0],$last[1],$color);
-        }
+        $end   = $this->realCoordinate($end);
+        imageline($this->gd,$start[0],$start[1],$end[0],$end[1],$color);
     }
 
-    protected function renderPolygon($numVertex)
+    protected function renderLineStrip($mode, bool $done)
     {
-        $php81 = (version_compare(phpversion(),'8.1.0')>=0);
-        if($numVertex===null) {
-            $numVertex=count($this->points);
+        if($done) {
+            if($mode!=GL::GL_LINE_LOOP) {
+                return;
+            }
+            $start = $this->prevRealPoint;
+            $end = $this->firstRealPoint;
+            $this->prevRealPoint = null;
+            $this->firstRealPoint = null;
+        } else {
+            if($this->prevRealPoint===null) {
+                $start = array_shift($this->points);
+                $this->prevRealPoint = $this->realCoordinate($start);
+                $this->firstRealPoint = $this->prevRealPoint;
+                return;
+            }
+            $start = $this->prevRealPoint;
+            $end = array_shift($this->points);
+            $end = $this->realCoordinate($end);
+            $this->prevRealPoint = $end;
         }
-        $color = $this->realColor();
+        $color = $this->currentRealColor();
+        imageline($this->gd,$start[0],$start[1],$end[0],$end[1],$color);
+    }
+
+    protected function renderPolygon($numVertex, bool $done)
+    {
+        if($done) {
+            if($numVertex!==null) {
+                return;
+            }
+            $numVertex=count($this->points);
+        } else {
+            if($numVertex===null) {
+                return;
+            }
+            if(count($this->points)<$numVertex) {
+                return;
+            }
+        }
+        $color = $this->currentRealColor();
         $points = [];
         $numPoints = 0;
         while($point = array_shift($this->points)) {
@@ -158,175 +246,13 @@ class GDGL implements GL
             $points[] = $point[0];
             $points[] = $point[1];
             $numPoints++;
-            if($numPoints>=$numVertex) {
-                if($php81) {
-                    imagefilledpolygon($this->gd,$points,$color);
-                } else {
-                    imagefilledpolygon($this->gd,$points,$numPoints,$color);
-                }
-                $points = [];
-                $numPoints = 0;
-            }
         }
-    }
-
-    public function renderImage(Image $image, float $centerx, float $centery, float $width, float $height) : void
-    {
-        // *** CAUTION ***
-        // $centerx, $centery are not supported.
-        // the center must be the center of image.
-
-        $la = $this->la;
-        $org_img = $image->img();
-        $img = $org_img;
-        $imgsx = imagesx($img);
-        $imgsy = imagesy($img);
-        $src_width = imagesx($img);
-        $src_height = imagesy($img);
-
-        [$trans,$rotate,$scale] = $this->rotationalDecomposition();
-        $flip = [1,1,1];
-        $dstw = (int)ceil(abs($scale[0])*$width);
-        $dsth = (int)ceil(abs($scale[1])*$height);
-        if($imgsx!=$dstw||$imgsy!=$dsth) {
-            $newImg = imagecreatetruecolor($dstw,$dsth);
-            imagealphablending($newImg,false);
-            imagecopyresampled(
-                $newImg,
-                $img,
-                0,0,
-                0,0,
-                $dstw,$dsth,
-                $imgsx,$imgsy
-            );
-            $img = $newImg;
-            $imgsx=$dstw;
-            $imgsy=$dsth;
-            unset($newImg);
-        }
-        if($scale[0]<0) {
-            if($org_img===$img) {
-                $newImg = imagecreatetruecolor($imgsx,$imgsy);
-                imagealphablending($newImg,false);
-                imagecopy($newImg,$img,0,0,0,0,$imgsx,$imgsy);
-                $img = $newImg;
-                unset($newImg);
-            }
-            imageflip($img,IMG_FLIP_HORIZONTAL);
-            $flip[0] = -1;
-        }
-        if($scale[1]<0) {
-            if($org_img===$img) {
-                $newImg = imagecreatetruecolor($imgsx,$imgsy);
-                imagealphablending($newImg,false);
-                imagecopy($newImg,$img,0,0,0,0,$imgsx,$imgsy);
-                $img = $newImg;
-                unset($newImg);
-            }
-            imageflip($img,IMG_FLIP_VERTICAL);
-            $flip[1] = -1;
-        }
-
-        $rotdeg = 0;
-        if($rotate!=0) {
-            $rotdeg = $rotate/self::DEG2RAD;
-            $backcolor = imagecolorallocatealpha($img,0,0,0,127);
-            $img = imagerotate($img,-$rotdeg,$backcolor);
-            imagealphablending($img,false);
-            $imgsx = imagesx($img);
-            $imgsy = imagesy($img);
-        }
-
-        //$dst_center = $this->realCoordinate([$centerx,$centery,0.0]);
-        $dst_center = $this->realCoordinate([0.0,0.0,0.0]);
-        $dst_center[0] = $dst_center[0]-(int)floor($imgsx/2);
-        $dst_center[1] = $dst_center[1]-(int)floor($imgsy/2);
-
-        imagecopy(
-            $this->gd,$img,
-            $dst_center[0],$dst_center[1],
-            0,0,
-            $imgsx,$imgsy
-        );
-    }
-
-    protected function rotationalDecomposition()
-    {
-        $la = $this->la;
-        $trans = $la->gemv($this->currentMatrix,$la->array([0,0,0,1]));
-        $xbase_r = $la->gemv($this->currentMatrix,$la->array([1,0,0,1]));
-        $ybase_r = $la->gemv($this->currentMatrix,$la->array([0,1,0,1]));
-        $la->axpy($trans,$xbase_r,-1);
-        $la->axpy($trans,$ybase_r,-1);
-        
-        //echo "xbase_r=[".implode(',',$xbase_r)."],ybase_r=[".implode(',',$ybase_r)."]\n";
-        $dxscale=sqrt($xbase_r[0]**2+$xbase_r[1]**2);
-        $dyscale=sqrt($ybase_r[0]**2+$ybase_r[1]**2);
-    
-        $illegal = false;
-        if(abs($xbase_r[0])>abs($xbase_r[1])) {
-            if($xbase_r[0]>=0&&$ybase_r[1]>=0) {
-                $th = atan($xbase_r[1]/$xbase_r[0]);      // ==== Front side 1 ====
-                $scale = [$dxscale,$dyscale];             // -45 ~ +45 deg
-                $flags = 'F1';
-            } elseif($xbase_r[0]<0&&$ybase_r[1]<0) {
-                $th = atan($xbase_r[1]/$xbase_r[0])+M_PI; // ==== Front side 2 ====
-                $scale = [$dxscale,$dyscale];             // +135 ~ -135 deg
-                $flags = 'F2';
-            } elseif($xbase_r[0]>=0&&$ybase_r[1]<0) {
-                $th = atan($xbase_r[1]/$xbase_r[0])+M_PI; // ==== Back side 1 ====
-                $scale = [-$dxscale,$dyscale];            // +135 ~ -135 deg
-                $flags = 'B1';
-            } elseif($xbase_r[0]<0&&$ybase_r[1]>=0) {
-                $th = atan($xbase_r[1]/$xbase_r[0]);      // ==== Back side 2 ====
-                $scale = [-$dxscale,$dyscale];            //  -45 ~ +45 deg
-                $flags = 'B2';
-            } else {
-                $illegal = true;
-            }
+        $php81 = (version_compare(phpversion(),'8.1.0')>=0);
+        if($php81) {
+            imagefilledpolygon($this->gd,$points,$color);
         } else {
-            if($xbase_r[1]>=0&&$ybase_r[0]<0) {
-                $th = M_PI/2-atan($xbase_r[0]/$xbase_r[1]);  // ==== Front side 3 ====
-                $scale = [$dxscale,$dyscale];                // +45 ~ +135 deg
-                $flags = 'F3';
-            } elseif($xbase_r[1]<0&&$ybase_r[0]>=0) {
-                $th = -M_PI/2-atan($xbase_r[0]/$xbase_r[1]); // ==== Front side 4 ====
-                $scale = [$dxscale,$dyscale];                // -135 ~ -45 deg
-                $flags = 'F4';
-            } elseif($xbase_r[1]>=0&&$ybase_r[0]>=0) {
-                $th = -M_PI/2-atan($xbase_r[0]/$xbase_r[1]); // ==== Back side 3 ====
-                $scale = [-$dxscale,$dyscale];               // -135 ~ -45 deg
-                $flags = 'B3';
-            } elseif($xbase_r[1]<0&&$ybase_r[0]<0) {
-                $th = M_PI/2-atan($xbase_r[0]/$xbase_r[1]);  // ==== Back side 4 ====
-                $scale = [-$dxscale,$dyscale];               //  +45 ~ +135 deg
-                $flags = 'B4';
-            } else {
-                $illegal = true;
-            }
+            imagefilledpolygon($this->gd,$points,$numPoints,$color);
         }
-        if($illegal) {
-            echo "scalex=".$scalex.",scaley=".$scaley.",rotate=".sprintf("%2.0f",$theta*180/M_PI)."\n";
-            echo "xb=".implode(',',$xbase_r)." yb=".implode(',',$ybase_r)."\n";
-            throw new \Exception("Illegal");
-        }
-        if($th>M_PI) {
-            $th -= 2*M_PI;
-        }
-        if($th<-M_PI) {
-            $th += 2*M_PI;
-        }
-        return [$trans,$th,$scale,$flags];
-    }
-
-    public function glVertex2f(float $x, float $y) : void
-    {
-        $this->points[] = [$x, $y, 0];
-    }
-
-    public function glVertex3f(float $x, float $y, float $z) : void
-    {
-        $this->points[] = [$x, $y, $z];
     }
 
     /**
@@ -346,6 +272,7 @@ class GDGL implements GL
 
     /**
     * GL_LINE_STIPPLE
+    * GL_BLEND
     */
     public function glDisable(int $cap) : void
     {
@@ -389,21 +316,26 @@ class GDGL implements GL
     public function glColor4f(float $red, float $green, float $blue, float $alpha) : void
     {
         $this->color = $this->transColor($red, $green, $blue, $alpha);
+        $this->fgRealColor = imagecolorallocatealpha($this->gd,...$this->color);
+        if(isset($this->cap[GL::GL_LINE_STIPPLE])) {
+            $this->glLineStipple($this->currentLineStippleFactor,$this->currentLineStipplePattern);
+        }
     }
 
     public function glClearColor(float $red, float $green, float $blue, float $alpha) : void
     {
         $this->clearColor = $this->transColor($red, $green, $blue, $alpha);
+        $this->bgRealColor = imagecolorallocatealpha($this->gd,...$this->clearColor);
     }
 
     public function glLineStipple(int $factor, int $pattern) : void
     {
-        $fg = imagecolorallocatealpha($this->gd,...$this->color);
-        $bg = imagecolorallocatealpha($this->gd,...$this->clearColor);
+        $this->currentLineStippleFactor = $factor;
+        $this->currentLineStipplePattern = $pattern;
         $style = [];
         for($b=0;$b<16;$b++) {
             for($n=0;$n<$factor;$n++) {
-                $style[] = ($pattern&0x0001)?$fg:$bg;
+                $style[] = ($pattern&0x0001)?$this->fgRealColor:$this->bgRealColor;
             }
             $pattern = $pattern >> 1;
         }
@@ -468,31 +400,108 @@ class GDGL implements GL
         $this->currentMatrix = $la->gemm($this->currentMatrix,$scale);
     }
 
+    protected function remainder(float $x, float $y) : float
+    {
+        $v = floor($x / $y);
+        $r = $x - $v*$y;
+        $r = ($y>0) ? abs($r) : -abs($r);
+        return $r;
+    }
+
+    public function renderImage(Image $image, float $centerx, float $centery, float $width, float $height) : void
+    {
+        $src_x = $centerx-$width/2;
+        $src_y = $centery-$height/2;
+
+        $p0 = $this->realCoordinate([-1, -1, 0],realMode:true);
+        $p1 = $this->realCoordinate([ 1, -1, 0],realMode:true);
+        $p2 = $this->realCoordinate([ 1,  1, 0],realMode:true);
+        $p3 = $this->realCoordinate([-1,  1, 0],realMode:true);
+        $x = min($p0[0],$p1[0],$p2[0],$p3[0]);
+        $y = min($p0[1],$p1[1],$p2[1],$p3[1]);
+        $dst_width = max($p0[0],$p1[0],$p2[0],$p3[0])-$x;
+        $dst_height = max($p0[1],$p1[1],$p2[1],$p3[1])-$y;
+
+        $dst_diagonal0 = $dst_height**2 - ($p3[1]-$p1[1])**2;
+        $dst_diagonal1 = $dst_width**2 -($p2[0]-$p0[0])**2;
+        if($dst_diagonal0==0) {
+            $dst_diagonal0 = $dst_height**2 - ($p2[1]-$p0[1])**2;
+            $dst_diagonal1 = $dst_width**2 -($p3[0]-$p1[0])**2;
+        }
+        if($dst_diagonal0==0) {
+            $oblateness = 1.0;
+        } else {
+            $oblateness = sqrt($dst_diagonal1/$dst_diagonal0);
+        }
+
+        $exp_width  = sqrt(($p1[0]-$p0[0])**2 + (($p1[1]-$p0[1])*$oblateness)**2);
+        $exp_height = sqrt(($p2[0]-$p1[0])**2 + (($p2[1]-$p1[1])*$oblateness)**2);
+        $rotdeg = atan2(($p0[1]-$p1[1])*$oblateness,$p1[0]-$p0[0])/self::DEG2RAD;
+        $v_rotdeg = atan2(($p1[1]-$p2[1])*$oblateness,$p2[0]-$p1[0])/self::DEG2RAD;
+        $flip = (($this->remainder(($v_rotdeg+360)-($rotdeg+360)+180,360)-180) < 0);
+
+        // expanding original image
+        $img = $image->img();
+        $expandedImg = imagecreatetruecolor((int)$exp_width,(int)($exp_height));
+        imagealphablending($expandedImg,false);
+        imagecopyresampled(
+            $expandedImg,                       /// dst img
+            $img,                               /// src img
+            0,0,                                /// dst pos
+            (int)$src_x,(int)$src_y,            /// src pos
+            (int)$exp_width,(int)$exp_height,   /// dst width
+            $width,$height                      /// src width
+        );
+        if($flip) {
+            imageflip($expandedImg,IMG_FLIP_VERTICAL);
+        }
+
+        // rotate original image
+        $backcolor = imagecolorallocatealpha($img,0,0,0,127);
+        $img = imagerotate($expandedImg,$rotdeg,$backcolor);
+        imagedestroy($expandedImg);
+        unset($expandedImg);
+        imagealphablending($img,false);
+
+        // mapping rotated image
+        $imgsx = imagesx($img);
+        $imgsy = imagesy($img);
+        if($imgsx==(int)$dst_width && $imgsy==(int)$dst_height) {
+            imagecopy(
+                $this->gd,$img,
+                (int)$x,(int)$y,
+                0,0,
+                $imgsx,$imgsy
+            );
+        } else {
+            imagecopyresampled(
+                $this->gd,$img,
+                (int)$x,(int)$y,
+                0,0,
+                (int)$dst_width,(int)$dst_height,
+                $imgsx,$imgsy
+            );
+        }
+        imagedestroy($img);
+    }
+
     public function get_display($display)
     {
         return null;
     }
 
-    public function get_window($width, $height, $display)
+    public function createWindow($width, $height, $display)
     {
         $this->gd = imagecreatetruecolor($width, $height);
         $this->width = $width;
         $this->height = $height;
-        //$this->viewMatrix = $this->la->array([
-        //    [1, 0,0,0],
-        //    [0,-1,0,$height-1],
-        //    [0, 0,1,0],
-        //    [0, 0,0,1],
-        //]);
+        $this->glViewport(0, 0, $width, $height);
         return new Window($this, $width, $height, $display);
     }
 
     public function clear() : void
     {
-        $c = $this->clearColor;
-        $color = imagecolorallocate($this->gd,$c[0],$c[1],$c[2]);
-        imagefilledrectangle($this->gd,0,0,$this->width-1,$this->height-1,
-            $color);
+        $this->glClear(GL::GL_COLOR_BUFFER_BIT|GL::GL_DEPTH_BUFFER_BIT);
     }
 
     public function flip() : void
@@ -500,14 +509,14 @@ class GDGL implements GL
         imageflip($this->gd,IMG_FLIP_VERTICAL);
     }
 
-    public function load_image($fname)
+    public function load_image($fname) : Image
     {
         $image = new Image($this->gd);
         $image->load($fname);
         return $image;
     }
 
-    protected function outputFile()
+    protected function outputFile() : string
     {
         $filename = sys_get_temp_dir().'/rindow/rlgym';
         @mkdir($filename,true);
@@ -517,7 +526,7 @@ class GDGL implements GL
         return $filename;
     }
 
-    public function output()
+    public function output() : string
     {
         $fname = $this->outputFile();
         imagegif($this->gd,$fname);
@@ -525,7 +534,7 @@ class GDGL implements GL
         return $fname;
     }
 
-    public function get_image_data()
+    public function get_image_data() : NDArray
     {
         if(!class_exists('Rindow\\Math\\Matrix\\NDArrayPhp')) {
             throw new LogicException('Requires rindow-math-matrix package.');
@@ -634,5 +643,10 @@ class GDGL implements GL
     public function close() : void
     {
         imagedestroy($this->gd);
+    }
+
+    public function currentMatrix() : NDArray
+    {
+        return $this->currentMatrix;
     }
 }

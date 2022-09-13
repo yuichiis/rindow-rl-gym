@@ -1,5 +1,5 @@
 <?php
-namespace Rindow\RL\Gym\CartPole;
+namespace Rindow\RL\Gym\ClassicControl\CartPole;
 
 class CartPoleV1 extends CartPoleEnv
 {

@@ -10,7 +10,7 @@ class LineWidth extends Attr
 {
     public $stroke;
 
-    public function __construct($gl,$stroke)
+    public function __construct($gl, float $stroke)
     {
         parent::__construct($gl);
         $this->stroke = $stroke;

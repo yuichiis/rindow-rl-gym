@@ -17,7 +17,7 @@ abstract class Attr
         $this->gl = $gl;
     }
 
-    public function disable()
+    public function disable() : void
     {
     }
 }

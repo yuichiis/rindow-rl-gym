@@ -28,7 +28,7 @@ class RenderFactory
         return $rendering;
     }
 
-    public function Viewer($width, $height, $display=null)
+    public function Viewer(int $width, int $height, $display=null)
     {
         $rendering = $this->factory();
         return $rendering->Viewer($width, $height, $display);

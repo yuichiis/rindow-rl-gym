@@ -44,12 +44,12 @@ abstract class AbstractEnv implements Environment
         return $this->rewardThreshold;
     }
 
-    public function observationSpace()
+    public function observationSpace() : mixed
     {
         return $this->observationSpace;
     }
 
-    public function actionSpace()
+    public function actionSpace() : mixed
     {
         return $this->actionSpace;
     }
@@ -144,7 +144,7 @@ abstract class AbstractEnv implements Environment
     /**
     * @return Any $observation
     **/
-    public function reset()
+    public function reset() : mixed
     {
         $this->elapsedSteps = 0;
         return $this->doReset();
@@ -153,7 +153,7 @@ abstract class AbstractEnv implements Environment
     /**
     * @return Any $depends on vender
     */
-    public function render(string $mode=null)
+    public function render(string $mode=null) : mixed
     {
         throw new LogicException("Not implemented.");
     }
@@ -161,19 +161,25 @@ abstract class AbstractEnv implements Environment
     /**
     * @return Any $depends on vender
     */
-    public function show(bool $loop=null,int $delay=null)
+    public function show(bool $loop=null,int $delay=null) : mixed
     {
         if($this->viewer===null) {
             throw new LogicException('Viewer is not ready');
         }
         $this->viewer->show($loop, $delay);
+        return null;
     }
 
     /**
     *
     */
     public function close() : void
-    {}
+    {
+        if($this->viewer) {
+            $this->viewer->close();
+            $this->viewer = null;
+        }
+    }
 
     /**
     * @param int $seed

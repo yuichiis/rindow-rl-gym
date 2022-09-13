@@ -6,6 +6,14 @@ namespace Rindow\RL\Gym\Core\Graphics;
  */
 interface GL
 {
+    /* Matrix Mode */
+    //const GL_MODELVIEW                    = 0x1700;
+    //const GL_PROJECTION                   = 0x1701;
+
+    /* ClearMode bit */
+    const GL_DEPTH_BUFFER_BIT             = 0x0100;
+    const GL_COLOR_BUFFER_BIT             = 0x4000;
+
     /* BeginMode */
     const GL_POINTS                       = 0x0000;
     const GL_LINES                        = 0x0001;
@@ -28,8 +36,6 @@ interface GL
 
     public function glBegin(int $mode) : void;
     public function glEnd() : void;
-    public function renderImage(
-        Image $image, float $centerx, float $centery, float $width, float $height) : void;
     public function glVertex2f(float $x, float $y) : void;
     public function glVertex3f(float $x, float $y, float $z) : void;
     public function glEnable(int $cap) : void;
@@ -45,8 +51,11 @@ interface GL
     public function glRotatef(float $angle, float $x, float $y, float $z) : void;
     public function glScalef(float $x,float $y,float $z) : void;
 
+    public function renderImage(
+        Image $image, float $centerx, float $centery, float $width, float $height) : void;
+
     //public function get_display($display);
-    //public function get_window($width, $height, $display);
+    //public function createWindow($width, $height, $display);
     //public function clear() : void;
     //public function flip() : void;
     //public function load_image($fname);

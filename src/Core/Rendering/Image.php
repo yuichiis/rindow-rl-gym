@@ -24,11 +24,15 @@ class Image extends Geom
         $this->flip = false;
     }
 
-    public function render1()
+    public function render1() : void
     {
+        $this->gl->glPushMatrix();
+        $this->gl->glScalef($this->width,$this->height,1);
+        $imgWidth = $this->img->width();
+        $imgHeight = $this->img->height();
         $this->gl->renderImage(
-            $this->img,
-            -$this->width / 2, -$this->height / 2, $this->width, $this->height
+            $this->img, (int)ceil($imgWidth/2), (int)ceil($imgHeight/2), $imgWidth, $imgHeight
         );
+        $this->gl->glPopMatrix();
     }
 }

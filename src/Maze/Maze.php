@@ -96,7 +96,7 @@ class Maze extends AbstractEnv
         return $this->observation;
     }
 
-    public function render($mode="human")
+    public function render($mode="human") : mixed
     {
         $policy = $this->policy;
         $width = $this->width;
@@ -118,8 +118,8 @@ class Maze extends AbstractEnv
                 [[+0.48, -0.48], [+0.48, +0.48]],  // RIGHT
                 [[-0.48, -0.48], [-0.48, +0.48]],  // LEFT
             ];
-            $this->viewer = $this->renderingFactory->Viewer($screen_width, $screen_height);
-            $rendering = $this->viewer->rendering();
+            $rendering = $this->renderingFactory->factory();
+            $this->viewer = $rendering->Viewer($screen_width, $screen_height);
             for($y=0;$y<$height;$y++) {
                 for($x=0;$x<$width;$x++) {
                     $pos = $y*$width+$x;

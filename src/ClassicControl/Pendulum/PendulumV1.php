@@ -1,5 +1,5 @@
 <?php
-namespace Rindow\RL\Gym\Pendulum;
+namespace Rindow\RL\Gym\ClassicControl\Pendulum;
 
 class PendulumV1 extends PendulumEnv
 {

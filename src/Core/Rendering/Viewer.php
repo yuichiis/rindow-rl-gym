@@ -7,6 +7,7 @@
 namespace Rindow\RL\Gym\Core\Rendering;
 
 use Rindow\RL\Gym\Core\Graphics\GL;
+use Interop\Polite\Math\Matrix\NDArray;
 
 class Viewer
 {
@@ -20,7 +21,7 @@ class Viewer
     protected $onetime_geoms;
     protected $transform;
 
-    public function __construct($rendering, $width, $height, $display=null)
+    public function __construct($rendering, int $width, int $height, $display=null)
     {
         $this->rendering = $rendering;
         $this->gl = $rendering->gl();
@@ -29,7 +30,7 @@ class Viewer
 
         $this->width = $width;
         $this->height = $height;
-        $this->window = $this->gl->get_window($width, $height, $display);
+        $this->window = $this->rendering->get_window($width, $height, $display);
         //$this->window->on_close = $this->window_closed_by_user;
         $this->isopen = true;
         $this->geoms = [];
@@ -45,7 +46,7 @@ class Viewer
         return $this->rendering;
     }
 
-    public function close()
+    public function close() : void
     {
         if($this->isopen) {
             $this->window->close();
@@ -58,12 +59,12 @@ class Viewer
         }
     }
 
-    public function window_closed_by_user()
+    public function window_closed_by_user() : void
     {
         $this->isopen = false;
     }
 
-    public function set_bounds($left, $right, $bottom, $top)
+    public function set_bounds(float $left, float $right, float $bottom, float $top) : void
     {
         assert($right > $left && $top > $bottom);
         $scalex = $this->width / ($right - $left);
@@ -72,12 +73,13 @@ class Viewer
             [-$left * $scalex, -$bottom * $scaley], $rotation=null, $scale=[$scalex, $scaley]
         );
     }
-    public function add_geom($geom)
+
+    public function add_geom(Geom $geom) : void
     {
         $this->geoms[] = $geom;
     }
 
-    public function add_onetime($geom)
+    public function add_onetime(Geom $geom) : void
     {
         $this->onetime_geoms[] = $geom;
     }
@@ -102,7 +104,7 @@ class Viewer
             //$arr = $arr->reshape($buffer->height, $buffer->width, 4);
             //$arr = $arr[::-1, :, 0:3];
         }
-        $this->window->flip();
+        //$this->window->flip();
         $this->onetime_geoms = [];
 
         if($mode == "rgb_array") {
@@ -115,13 +117,13 @@ class Viewer
         return $this->isopen;
     }
 
-    public function show(bool $loop=null,int $delay=null)
+    public function show(bool $loop=null,int $delay=null) : void
     {
         $this->gl->show($loop, $delay);
     }
 
     # Convenience
-    public function draw_circle($radius=10, $res=30, $filled=True, ...$attrs)
+    public function draw_circle(float $radius=10, float $res=30, bool $filled=True, ...$attrs) : Geom
     {
         $geom = $this->rendering->make_circle($radius, $res, $filled);
         $this->add_attrs($geom, $attrs);
@@ -129,7 +131,7 @@ class Viewer
         return $geom;
     }
 
-    public function draw_polygon($v, $filled=true, ...$attrs)
+    public function draw_polygon(array $v, bool $filled=true, ...$attrs) : Geom
     {
         $geom = $this->rendering->make_polygon($v, $filled);
         $this->add_attrs($geom, $attrs);
@@ -137,7 +139,7 @@ class Viewer
         return $geom;
     }
 
-    public function draw_polyline($v, ...$attrs)
+    public function draw_polyline(array $v, ...$attrs) : Geom
     {
         $geom = $this->rendering->make_polyline($v);
         $this->add_attrs($geom, $attrs);
@@ -145,7 +147,7 @@ class Viewer
         return $geom;
     }
 
-    public function draw_line($start, $end, ...$attrs)
+    public function draw_line(array $start, array $end, ...$attrs) : Geom
     {
         $geom = $this->rendering->Line($start, $end);
         $this->add_attrs($geom, $attrs);
@@ -153,7 +155,7 @@ class Viewer
         return $geom;
     }
 
-    public function get_array()
+    public function get_array() : NDArray
     {
         $this->window->flip();
         $arr = $this->gl->get_image_data();
@@ -161,12 +163,12 @@ class Viewer
         return $arr;
     }
 
-    protected function add_attrs($geom, $attrs)
+    protected function add_attrs(Geom $geom, array $attrs) : void
     {
-        if(in_array('color',$attrs)) {
+        if(array_key_exists('color',$attrs)) {
             $geom->set_color(...$attrs['color']);
         }
-        if(in_array('linewidth',$attrs)) {
+        if(array_key_exists('linewidth',$attrs)) {
             $geom->set_linewidth($attrs['linewidth']);
         }
     }

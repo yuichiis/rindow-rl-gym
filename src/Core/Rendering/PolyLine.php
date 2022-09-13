@@ -23,7 +23,7 @@ class PolyLine extends Geom
         $this->add_attr($this->linewidth);
     }
 
-    public function render1()
+    public function render1() : void
     {
         $this->gl->glBegin($this->close ? GL::GL_LINE_LOOP : GL::GL_LINE_STRIP);
         foreach($this->v as $p) {
@@ -32,7 +32,7 @@ class PolyLine extends Geom
         $this->gl->glEnd();
     }
 
-    public function set_linewidth($x)
+    public function set_linewidth(float $x) : void
     {
         $this->linewidth->stroke = $x;
     }

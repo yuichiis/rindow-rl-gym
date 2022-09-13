@@ -35,7 +35,7 @@ class Transform extends Attr
         $this->set_scale(...$scale);
     }
 
-    public function enable()
+    public function enable() : void
     {
         $this->gl->glPushMatrix();
         $this->gl->glTranslatef(
@@ -45,22 +45,23 @@ class Transform extends Attr
         $this->gl->glScalef($this->scale[0], $this->scale[1], 1);
     }
 
-    public function disable()
+    public function disable() : void
     {
         $this->gl->glPopMatrix();
     }
 
-    public function set_translation($newx, $newy)
+    public function set_translation(float $newx, float $newy) : void
     {
         $this->translation = [(float)$newx, (float)$newy];
     }
 
-    public function set_rotation($new)
+    public function set_rotation(float $new) : void
     {
-        $this->rotation = (float)$new;
+        $this->rotation = $new;
     }
 
-    public function set_scale($newx,$newy) {
+    public function set_scale(float $newx, float $newy)  : void
+    {
         $this->scale = [(float)$newx, (float)$newy];
     }
 }

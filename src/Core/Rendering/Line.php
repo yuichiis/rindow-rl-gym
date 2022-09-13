@@ -25,7 +25,7 @@ class Line extends Geom
         $this->add_attr($this->linewidth);
     }
 
-    public function render1()
+    public function render1() : void
     {
         $this->gl->glBegin(GL::GL_LINES);
         $this->gl->glVertex2f(...$this->start);
@@ -33,7 +33,7 @@ class Line extends Geom
         $this->gl->glEnd();
     }
 
-    public function set_linewidth($x)
+    public function set_linewidth(float $x) : void
     {
         $this->linewidth->stroke = $x;
     }

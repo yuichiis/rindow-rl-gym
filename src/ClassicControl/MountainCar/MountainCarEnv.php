@@ -46,7 +46,7 @@
 
 */
 
-namespace Rindow\RL\Gym\MountainCar;
+namespace Rindow\RL\Gym\ClassicControl\MountainCar;
 
 use RuntimeException;
 use InvalidArgumentException;
@@ -134,7 +134,7 @@ class MountainCarEnv extends AbstractEnv
         }
     }
 
-    public function render($mode="human")
+    public function render($mode="human") : mixed
     {
         $la = $this->la;
         $screen_width = 600;
@@ -146,8 +146,8 @@ class MountainCarEnv extends AbstractEnv
         $carheight = 20;
 
         if($this->viewer === null) {
-            $this->viewer = $this->renderingFactory->Viewer($screen_width, $screen_height);
-            $rendering = $this->viewer->rendering();
+            $rendering = $this->renderingFactory->factory();
+            $this->viewer = $rendering->Viewer($screen_width, $screen_height);
 
             $xs = $la->linspace($this->min_position, $this->max_position, 100);
             $ys = $this->height($xs);
@@ -208,13 +208,5 @@ class MountainCarEnv extends AbstractEnv
         # Control with left and right arrow keys.
         //return {(): 1, (276,): 0, (275,): 2, (275, 276): 1}
         throw LogicException('Not implemented');
-    }
-
-    public function close() : void
-    {
-        if($this->viewer) {
-            $this->viewer->close();
-            $this->viewer = null;
-        }
     }
 }

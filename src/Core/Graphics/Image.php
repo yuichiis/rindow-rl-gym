@@ -16,7 +16,7 @@ class Image
             throw new RuntimeException("unknown format: ".$fname);
         }
         imagealphablending($img,false);
-        imageflip($img,IMG_FLIP_VERTICAL);
+        //imageflip($img,IMG_FLIP_VERTICAL);
         unset($data);
         $this->img = $img;
     }
@@ -27,6 +27,16 @@ class Image
     public function img()
     {
         return $this->img;
+    }
+
+    public function width()
+    {
+        return imagesx($this->img);
+    }
+
+    public function height()
+    {
+        return imagesy($this->img);
     }
 
     public function __destruct()

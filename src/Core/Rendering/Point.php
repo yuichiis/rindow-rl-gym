@@ -10,7 +10,7 @@ use Rindow\RL\Gym\Core\Graphics\GL;
 
 class Point extends Geom
 {
-    public function render1()
+    public function render1() : void
     {
         $this->gl->glBegin(GL::GL_POINTS);  # draw point
         $this->gl->glVertex3f(0.0, 0.0, 0.0);

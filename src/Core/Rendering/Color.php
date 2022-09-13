@@ -10,13 +10,13 @@ class Color extends Attr
 {
     public $vec4;
 
-    public function __construct($gl,$vec4)
+    public function __construct($gl,array $vec4)
     {
         parent::__construct($gl);
         $this->vec4 = $vec4;
     }
 
-    public function enable()
+    public function enable() : void
     {
         $this->gl->glColor4f(...$this->vec4);
     }

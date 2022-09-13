@@ -1,5 +1,5 @@
 <?php
-namespace Rindow\RL\Gym\MountainCar;
+namespace Rindow\RL\Gym\ClassicControl\MountainCar;
 
 class MountainCarV0 extends MountainCarEnv
 {

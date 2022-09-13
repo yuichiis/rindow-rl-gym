@@ -53,7 +53,7 @@ Episode Termination:
 
 */
 
-namespace Rindow\RL\Gym\CartPole;
+namespace Rindow\RL\Gym\ClassicControl\CartPole;
 
 use RuntimeException;
 use Interop\Polite\Math\Matrix\NDArray;
@@ -110,6 +110,7 @@ class CartPoleEnv extends AbstractEnv
 
         $this->steps_beyond_done = null;
     }
+
     /**
     * @param Any $action
     * @return Set(Any $observation, Any $rewards, bool $done, Dict $info)
@@ -187,7 +188,7 @@ class CartPoleEnv extends AbstractEnv
         return $this->state;
     }
 
-    public function render($mode="human")
+    public function render($mode="human") : mixed
     {
         $screen_width = 600;
         $screen_height = 400;
@@ -202,8 +203,8 @@ class CartPoleEnv extends AbstractEnv
 
         if($this->viewer===null)
         {
-            $this->viewer = $this->renderingFactory->Viewer($screen_width, $screen_height);
-            $rendering = $this->viewer->rendering();
+            $rendering = $this->renderingFactory->factory();
+            $this->viewer = $rendering->Viewer($screen_width, $screen_height);
             [$l, $r, $t, $b] = [-$cartwidth / 2, $cartwidth / 2, $cartheight / 2, -$cartheight / 2];
             $axleoffset = $cartheight / 4.0;
             $cart = $rendering->FilledPolygon([[$l, $b], [$l, $t], [$r, $t], [$r, $b]]);
@@ -254,13 +255,5 @@ class CartPoleEnv extends AbstractEnv
         $this->poletrans->set_rotation(-$x[2]);
 
         return $this->viewer->render($mode);
-    }
-
-    public function close() : void
-    {
-        if($this->viewer) {
-            $this->viewer->close();
-            $this->viewer = null;
-        }
     }
 }

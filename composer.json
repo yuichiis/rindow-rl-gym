@@ -2,7 +2,7 @@
     "name": "rindow/rindow-rl-gym",
     "type": "library",
     "description": "A toolkit for developing and comparing reinforcement learning algorithms.",
-    "keywords": ["rindow","reinforcement","learning","machine learning","rl"],
+    "keywords": ["rindow","reinforcement","reinforcement learning","machine learning","rl","ml"],
     "license": "BSD-3-Clause",
     "require": {
         "php": "^8.0|^8.1",
@@ -10,7 +10,8 @@
         "rindow/rindow-math-matrix": "~1.2.0"
     },
     "require-dev": {
-        "ext-gd": "*"
+        "ext-gd": "*",
+        "rindow/rindow-math-plot": "~1.0.6"
     },
     "suggest": {
         "ext-rindow_openblas": "0.3.0 strongly recommended for speed"

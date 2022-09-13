@@ -21,7 +21,7 @@ abstract class Geom
         $this->attrs = [$this->color];
     }
 
-    public function render()
+    public function render() : void
     {
         foreach(array_reverse($this->attrs) as $attr) {
             $attr->enable();
@@ -32,12 +32,16 @@ abstract class Geom
         }
     }
 
-    public function add_attr($attr)
+    public function add_attr(Attr $attr) : void
     {
+        if($attr instanceof LineStyle) {
+            array_unshift($this->attrs, $attr);
+            return;
+        }
         $this->attrs[] = $attr;
     }
 
-    public function set_color($r, $g, $b)
+    public function set_color(float $r, float $g, float $b) : void
     {
         $this->color->vec4 = [$r, $g, $b, 1.0];
     }

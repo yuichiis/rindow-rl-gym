@@ -19,7 +19,7 @@ class Compound extends Geom
         }
     }
 
-    public function render1()
+    public function render1() : void
     {
         foreach ($this->gs as $g) {
             $g->render();
