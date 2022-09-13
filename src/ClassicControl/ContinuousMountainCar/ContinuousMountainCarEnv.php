@@ -1,52 +1,53 @@
 <?php
 /*
-    http://incompleteideas.net/MountainCar/MountainCar1.cp
-    permalink: https://perma.cc/6Z2N-PFWC
+# -*- coding: utf-8 -*-
+"""
+@author: Olivier Sigaud
 
-    Original Source Url:
-        https://github.com/openai/gym/blob/master/gym/envs/classic_control/mountain_car.py
+A merge between two sources:
 
-    Description:
-        The agent (a car) is started at the bottom of a valley. For any given
-        state the agent may choose to accelerate to the left, right or cease
-        any acceleration.
+* Adaptation of the MountainCar Environment from the "FAReinforcement" library
+of Jose Antonio Martin H. (version 1.0), adapted by  'Tom Schaul, tom@idsia.ch'
+and then modified by Arnaud de Broissia
 
-    Source:
-        The environment appeared first in Andrew Moore's PhD Thesis (1990).
+* the OpenAI/gym MountainCar environment
+itself from
+http://incompleteideas.net/sutton/MountainCar/MountainCar1.cp
+permalink: https://perma.cc/6Z2N-PFWC
+"""
 
-    Observation:
-        Type: Box(2)
-        Num    Observation               Min            Max
-        0      Car Position              -1.2           0.6
-        1      Car Velocity              -0.07          0.07
+"""
+Description:
+    The agent (a car) is started at the bottom of a valley. For any given
+    state the agent may choose to accelerate to the left, right or cease
+    any acceleration.
+Observation:
+    Type: Box(2)
+    Num    Observation               Min            Max
+    0      Car Position              -1.2           0.6
+    1      Car Velocity              -0.07          0.07
+Actions:
+    Type: Box(1)
+    Num    Action                    Min            Max
+    0      the power coef            -1.0           1.0
+    Note: actual driving force is calculated by multipling the power coef by power (0.0015)
 
-    Actions:
-        Type: Discrete(3)
-        Num    Action
-        0      Accelerate to the Left
-        1      Don't accelerate
-        2      Accelerate to the Right
+Reward:
+     Reward of 100 is awarded if the agent reached the flag (position = 0.45) on top of the mountain.
+     Reward is decrease based on amount of energy consumed each step.
 
-        Note: This does not affect the amount of velocity affected by the
-        gravitational pull acting on the car.
+Starting State:
+     The position of the car is assigned a uniform random value in
+     [-0.6 , -0.4].
+     The starting velocity of the car is always assigned to 0.
 
-    Reward:
-         Reward of 0 is awarded if the agent reached the flag (position = 0.5)
-         on top of the mountain.
-         Reward of -1 is awarded if the position of the agent is less than 0.5.
-
-    Starting State:
-         The position of the car is assigned a uniform random value in
-         [-0.6 , -0.4].
-         The starting velocity of the car is always assigned to 0.
-
-    Episode Termination:
-         The car position is more than 0.5
-         Episode length is greater than 200
+Episode Termination:
+     The car position is more than 0.45
+     Episode length is greater than 200
+"""
 
 */
-
-namespace Rindow\RL\Gym\ClassicControl\MountainCar;
+namespace Rindow\RL\Gym\ClassicControl\ContinuousMountainCar;
 
 use RuntimeException;
 use InvalidArgumentException;
@@ -56,29 +57,43 @@ use Rindow\RL\Gym\Core\AbstractEnv;
 use Rindow\RL\Gym\Core\Spaces\Discrete;
 use Rindow\RL\Gym\Core\Spaces\Box;
 
-class MountainCarEnv extends AbstractEnv
+class ContinuousMountainCarEnv extends AbstractEnv
 {
     // metadata = {"render.modes": ["human", "rgb_array"], "video.frames_per_second": 30}
 
+    protected $min_action = -1.0;
+    protected $max_action = 1.0;
     protected $min_position = -1.2;
     protected $max_position = 0.6;
     protected $max_speed = 0.07;
-    protected $goal_position = 0.5;
-    protected $force = 0.001;
-    protected $gravity = 0.0025;
+
+    protected $goal_position = 0.45; # was 0.5 in gym, 0.45 in Arnaud de Broissia's version
     protected $goal_velocity;
-    protected $low;
-    protected $high;
+    protected $power;
+    protected $low_state;
+    protected $high_state;
     protected $state;
 
-    public function __construct($la, int $goal_velocity=0)
+    public function __construct($la, $goal_velocity=0)
     {
         parent::__construct($la);
         $this->goal_velocity = $goal_velocity;
-        $this->low = $la->array([$this->min_position, -$this->max_speed], NDArray::float32);
-        $this->high = $la->array([$this->max_position, $this->max_speed], NDArray::float32);
-        $this->setActionSpace(new Discrete($la, 3));
-        $this->setObservationSpace(new Box($la, $this->low, $this->high, [2], NDArray::float32));
+        $this->power = 0.0015;
+
+        $this->low_state = $la->array(
+            [$this->min_position, -$this->max_speed], NDArray::float32
+        );
+        $this->high_state = $la->array(
+            [$this->max_position, $this->max_speed], NDArray::float32
+        );
+
+        $this->setActionSpace( new Box($la,
+            $this->min_action, $this->max_action, shape:[1], dtype:NDArray::float32
+        ));
+        $this->setObservationSpace( new Box($la,
+            $this->low_state, $this->high_state, dtype:NDArray::float32
+        ));
+
         $this->seed();
     }
 
@@ -89,22 +104,35 @@ class MountainCarEnv extends AbstractEnv
     protected function doStep($action) : array
     {
         $la = $this->la;
-        //assert self.action_space.contains(action), "%r (%s) invalid" % (
-        //    action,
-        //    type(action),
-        //)
-
         [$position, $velocity] = $this->state;
-        $velocity += ($action - 1) * $this->force + cos(3 * $position) * (-$this->gravity);
-        $velocity = min(max($velocity, -$this->max_speed), $this->max_speed);
+        $force = min(max($action[0], $this->min_action), $this->max_action);
+
+        $velocity += $force * $this->power - 0.0025 * cos(3 * $position);
+        if($velocity > $this->max_speed) {
+            $velocity = $this->max_speed;
+        }
+        if($velocity < -$this->max_speed) {
+            $velocity = -$this->max_speed;
+        }
         $position += $velocity;
-        $position = min(max($position, $this->min_position), $this->max_position);
-        if ($position == $this->min_position && $velocity < 0) {
+        if($position > $this->max_position) {
+            $position = $this->max_position;
+        }
+        if($position < $this->min_position) {
+            $position = $this->min_position;
+        }
+        if($position == $this->min_position && $velocity < 0) {
             $velocity = 0;
         }
 
+        # Convert a possible numpy bool to a Python bool.
         $done = ($position >= $this->goal_position && $velocity >= $this->goal_velocity);
-        $reward = -1.0;
+
+        $reward = 0;
+        if($done) {
+            $reward = 100.0;
+        }
+        $reward -= pow($action[0], 2) * 0.1;
 
         $this->state = [$position, $velocity];
         $state = $la->array($this->state, $dtype=NDArray::float32);
