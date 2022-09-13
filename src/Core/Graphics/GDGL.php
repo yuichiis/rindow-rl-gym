@@ -519,7 +519,9 @@ class GDGL implements GL
     protected function outputFile() : string
     {
         $filename = sys_get_temp_dir().'/rindow/rlgym';
-        @mkdir($filename,true);
+        if(!file_exists($filename)) {
+            @mkdir($filename,true);
+        }
         $filename = tempnam($filename,'plo');
         rename($filename, $filename.'.gif');
         $filename = $filename.'.gif';
