@@ -471,6 +471,10 @@ class GDGL implements GL
         $v_rotdeg = atan2(($p1[1]-$p2[1])*$oblateness,$p2[0]-$p1[0])/self::DEG2RAD;
         $flip = (($this->remainder(($v_rotdeg+360)-($rotdeg+360)+180,360)-180) < 0);
 
+        if(((int)$exp_width)<=0 || ((int)$exp_height)<=0) {
+            return;
+        }
+
         // expanding original image
         $img = $image->img();
         $expandedImg = imagecreatetruecolor((int)$exp_width,(int)($exp_height));
