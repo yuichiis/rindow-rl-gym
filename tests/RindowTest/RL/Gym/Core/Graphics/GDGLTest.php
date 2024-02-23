@@ -8,7 +8,7 @@ use Rindow\Math\Plot\Plot;
 use Rindow\RL\Gym\Core\Graphics\GDGL;
 use Rindow\RL\Gym\Core\Graphics\GL;
 
-class Test extends TestCase
+class GDGLTest extends TestCase
 {
     public function newMatrixOperator()
     {

@@ -9,7 +9,7 @@ use Rindow\RL\Gym\ClassicControl\Acrobot\AcrobotV1;
 use Rindow\RL\Gym\Core\Spaces\Box;
 use Rindow\RL\Gym\Core\Spaces\Discrete;
 
-class Test extends TestCase
+class AcrobotTest extends TestCase
 {
     public function newMatrixOperator()
     {

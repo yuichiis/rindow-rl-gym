@@ -9,7 +9,7 @@ use Rindow\RL\Gym\ClassicControl\MountainCar\MountainCarV0;
 use Rindow\RL\Gym\Core\Spaces\Box;
 use Rindow\RL\Gym\Core\Spaces\Discrete;
 
-class Test extends TestCase
+class MountainCarTest extends TestCase
 {
     public function newMatrixOperator()
     {

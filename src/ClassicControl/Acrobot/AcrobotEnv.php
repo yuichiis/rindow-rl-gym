@@ -61,6 +61,7 @@ use Rindow\RL\Gym\Core\AbstractEnv;
 use Rindow\RL\Gym\Core\Spaces\Discrete;
 use Rindow\RL\Gym\Core\Spaces\Box;
 use Rindow\RL\Gym\ClassicControl\Rendering\RenderFactory;
+use function Rindow\Math\Matrix\R;
 
 class AcrobotEnv extends AbstractEnv
 {
@@ -144,7 +145,7 @@ class AcrobotEnv extends AbstractEnv
         // append torque to s
         $slen = count($s);
         $s_augmented = $la->alloc([$slen+1]);
-        $la->copy($s,$s_augmented[[0,$slen-1]]);
+        $la->copy($s,$s_augmented[R(0,$slen)]);
         $s_augmented[$slen] = $torque;
 
         $ns = $this->rk4([$this,'_dsdt'], $s_augmented, [0, $this->dt]);
@@ -186,7 +187,7 @@ class AcrobotEnv extends AbstractEnv
         $I2 = self::LINK_MOI;
         $g = 9.8;
         $a = $s_augmented[4];
-        $s = $la->copy($s_augmented[[0,3]]);
+        $s = $la->copy($s_augmented[R(0,4)]);
         $theta1 = $s[0];
         $theta2 = $s[1];
         $dtheta1 = $s[2];
@@ -378,7 +379,7 @@ class AcrobotEnv extends AbstractEnv
         }
         # We only care about the final timestep and we cleave off action value which will be zero
         #return yout[-1][:4]
-        $r = $yout[count($yout)-1][[0,3]];
+        $r = $yout[count($yout)-1][R(0,4)];
         return $r;
     }
 }

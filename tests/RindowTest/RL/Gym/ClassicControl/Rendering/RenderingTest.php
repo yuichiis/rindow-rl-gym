@@ -10,7 +10,7 @@ use Rindow\RL\Gym\Core\Graphics\GL;
 use Rindow\RL\Gym\ClassicControl\Rendering\Rendering;
 use Rindow\RL\Gym\ClassicControl\Rendering\RenderFactory;
 
-class Test extends TestCase
+class RenderingTest extends TestCase
 {
     public function newMatrixOperator()
     {

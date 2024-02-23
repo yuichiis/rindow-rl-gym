@@ -139,7 +139,7 @@ class GDGL implements GL
         $this->points = [];
         $this->prevRealPoint = null;
         $this->firstRealPoint = null;
-}
+    }
 
     public function glEnd() : void
     {
@@ -148,7 +148,7 @@ class GDGL implements GL
         $this->points = [];
         $this->prevRealPoint = null;
         $this->firstRealPoint = null;
-}
+    }
 
     public function glVertex2f(float $x, float $y) : void
     {
@@ -596,7 +596,7 @@ class GDGL implements GL
 
         $la = $this->la;
         //$img = $la->alloc([$height,$width,$channels],NDArray::uint8);
-        $img = new NDArrayPhp(null,NDArray::uint8,[$height,$width,$channels]);
+        $img = new NDArrayPhp(null,NDArray::uint8,[$height,$width,$channels],service:$la->service());
         $buffer = $img->buffer();
         if(method_exists($buffer,'load')) {
             // OpenBlasBuffer

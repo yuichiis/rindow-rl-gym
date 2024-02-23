@@ -9,7 +9,7 @@ use Rindow\RL\Gym\ClassicControl\Pendulum\PendulumV1;
 use Rindow\RL\Gym\Core\Spaces\Box;
 use Rindow\RL\Gym\Core\Spaces\Discrete;
 
-class Test extends TestCase
+class PendulumTest extends TestCase
 {
     public function newMatrixOperator()
     {

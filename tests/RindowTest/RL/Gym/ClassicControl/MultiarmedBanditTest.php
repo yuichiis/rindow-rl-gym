@@ -11,7 +11,7 @@ use Rindow\RL\Gym\Core\Spaces\Discrete;
 
 use LogicException;
 
-class Test extends TestCase
+class MultiarmedBanditTest extends TestCase
 {
     public function newMatrixOperator()
     {

@@ -9,7 +9,7 @@ use Rindow\RL\Gym\ClassicControl\Maze\Maze;
 use Rindow\RL\Gym\Core\Spaces\Box;
 use Rindow\RL\Gym\Core\Spaces\Discrete;
 
-class Test extends TestCase
+class MazeTest extends TestCase
 {
     public function newMatrixOperator()
     {
