@@ -73,12 +73,18 @@ class CartPoleEnv extends AbstractEnv
     protected $force_mag = 10.0;
     protected $tau = 0.02;  # seconds between state updates;
     protected $kinematics_integrator = "euler";
+    protected $renderingFactory;
+    protected $carttrans;
+    protected $poletrans;
     protected $total_mass;
     protected $polemass_length;
     protected $theta_threshold_radians;
     protected $x_threshold;
     protected $state;
     protected $steps_beyond_done;
+    protected $axle;
+    protected $track;
+    protected $pole_geom;
 
     public function __construct(object $la, array $metadata=null, object $renderer=null)
     {

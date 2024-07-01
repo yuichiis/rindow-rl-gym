@@ -74,6 +74,10 @@ class ContinuousMountainCarEnv extends AbstractEnv
     protected $low_state;
     protected $high_state;
     protected $state;
+    protected $renderingFactory;
+    protected $track;
+    protected $cartrans;
+    
 
     public function __construct(object $la, $goal_velocity=0, array $metadata=null, object $renderer=null)
     {

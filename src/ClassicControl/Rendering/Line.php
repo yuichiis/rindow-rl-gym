@@ -10,6 +10,10 @@ use Rindow\RL\Gym\Core\Graphics\GL;
 
 class Line extends Geom
 {
+    protected $start;
+    protected $end;
+    protected $linewidth;
+
     public function __construct($gl, array $start=null, array $end=null)
     {
         parent::__construct($gl);

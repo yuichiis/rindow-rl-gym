@@ -30,6 +30,11 @@ class PendulumEnv extends AbstractEnv
     protected $l = 1.0;
     protected $g;
     protected $state;
+    protected $renderingFactory;
+    protected $last_u;
+    protected $pole_transform;
+    protected $img;
+    protected $imgtrans;
 
     public function __construct(object $la, $g=10.0, array $metadata=null, object $renderer=null)
     {

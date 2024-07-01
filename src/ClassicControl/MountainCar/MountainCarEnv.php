@@ -67,10 +67,13 @@ class MountainCarEnv extends AbstractEnv
     protected $goal_position = 0.5;
     protected $force = 0.001;
     protected $gravity = 0.0025;
+    protected $renderingFactory;
     protected $goal_velocity;
     protected $low;
     protected $high;
     protected $state;
+    protected $track;
+    protected $cartrans;
 
     public function __construct(object $la, int $goal_velocity=0, array $metadata=null, object $renderer=null)
     {

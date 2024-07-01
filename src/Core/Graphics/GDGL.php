@@ -15,6 +15,8 @@ class GDGL implements GL
     protected $viewMatrix;
     protected $stackMatrix = [];
     protected $gd;
+    protected $width;
+    protected $height;
     protected $color;
     protected $clearColor;
     protected $fgRealColor;
@@ -23,6 +25,7 @@ class GDGL implements GL
     protected $currentLineStipplePattern;
 
     protected $mode;
+    protected $points = [];
     protected $prevRealPoint;
     protected $firstRealPoint;
     protected $cap = [];

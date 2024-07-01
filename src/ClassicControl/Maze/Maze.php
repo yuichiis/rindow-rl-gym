@@ -24,6 +24,12 @@ class Maze extends AbstractEnv
     protected $policy;               // List<float>
     protected $observation;
     protected $throwInvalidAction = true;
+    protected $renderingFactory;
+    protected $width;
+    protected $height;
+    protected $exit;
+    protected $man;
+    protected $mantrans;
 
     public function __construct(object $la,NDArray $policy,
         int $width,int $height,int $exit,
