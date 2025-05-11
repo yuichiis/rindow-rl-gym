@@ -1,6 +1,8 @@
 <?php
 namespace Rindow\RL\Gym\Core\Graphics;
 
+use Interop\Polite\Math\Matrix\NDArray;
+
 /**
  *
  */
@@ -31,6 +33,8 @@ interface GL
     const GL_BLEND                        = 0x0BE2;
 
     /* BlendingFactorDest */
+    const GL_ZERO                         = 0;
+    const GL_ONE                          = 1;
     const GL_SRC_ALPHA                    = 0x0302;
     const GL_ONE_MINUS_SRC_ALPHA          = 0x0303;
 
@@ -54,14 +58,14 @@ interface GL
     public function renderImage(
         Image $image, float $centerx, float $centery, float $width, float $height) : void;
 
-    //public function get_display($display);
-    //public function createWindow($width, $height, $display);
-    //public function clear() : void;
-    //public function flip() : void;
-    //public function load_image($fname);
-    //public function output();
-    //public function get_image_data();
-    //public function show(bool $loop=null,int $delay=null) : void;
-    //public function handler();
-    //public function close() : void;
+    public function get_display(mixed $display) : mixed;
+    public function createWindow(int $width, int $height, mixed $display) : mixed;
+    public function clear() : void;
+    public function flip() : void;
+    public function load_image(string $fname) : mixed;
+    public function output() : string;
+    public function get_image_data() : NDArray;
+    public function show(?bool $loop=null,?int $delay=null) : void;
+    public function handler() : mixed;
+    public function close() : void;
 }

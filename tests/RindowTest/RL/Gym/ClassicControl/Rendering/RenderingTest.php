@@ -26,7 +26,7 @@ class RenderingTest extends TestCase
     {
         return [
             'render.skipCleaning' => true,
-            'render.skipRunViewer' => getenv('TRAVIS_PHP_VERSION') ? true : false,
+            'render.skipRunViewer' => getenv('PLOT_RENDERER_SKIP') ? true : false,
         ];
     }
 

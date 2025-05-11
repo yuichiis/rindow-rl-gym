@@ -25,7 +25,7 @@ class MazeTest extends TestCase
     {
         return [
             'render.skipCleaning' => true,
-            'render.skipRunViewer' => getenv('TRAVIS_PHP_VERSION') ? true : false,
+            'render.skipRunViewer' => getenv('PLOT_RENDERER_SKIP') ? true : false,
         ];
     }
 
@@ -64,7 +64,7 @@ class MazeTest extends TestCase
         $obsShape = $obsSpace->shape();
         $obsDtype = $obsSpace->dtype();
         $this->assertEquals([],$obsShape);
-        $this->assertEquals(null,$obsDtype);
+        $this->assertEquals(NDArray::int32,$obsDtype);
         $this->assertIsInt($obsSpace->n());
         $this->assertEquals(9,$obsSpace->n());
 
@@ -74,23 +74,26 @@ class MazeTest extends TestCase
         $actionShape = $actionSpace->shape();
         $actionDtype = $actionSpace->dtype();
         $this->assertEquals([],$actionShape);
-        $this->assertEquals(null,$actionDtype);
+        $this->assertEquals(NDArray::int32,$actionDtype);
         $this->assertIsInt($actionSpace->n());
         [$dmy,$actionN] = $mazeRules->shape();
         $this->assertEquals($actionN,$actionSpace->n());
 
         // reset
         $obs = $env->reset();
-        $this->assertIsInt($obs);
-        $this->assertEquals(0,$obs);
+        $this->assertInstanceof(NDArray::class,$obs);
+        $this->assertEquals(NDArray::int32,$obs->dtype());
+        $this->assertEquals(0,$la->scalar($obs));
 
         // step
-        $res = $env->step(Maze::RIGHT);
+        $action = $la->array(Maze::RIGHT,dtype:NDArray::int32);
+        $res = $env->step($action);
         $this->assertIsArray($res);
         $this->assertCount(4,$res);
         [$obs,$reward,$done,$info] = $res;
-        $this->assertIsInt($obs);
-        $this->assertEquals(1,$obs);
+        $this->assertInstanceof(NDArray::class,$obs);
+        $this->assertEquals(NDArray::int32,$obs->dtype());
+        $this->assertEquals(1,$la->scalar($obs));
         $this->assertIsFloat($reward);
         $this->assertEquals(-1.0,$reward);
         $this->assertIsBool($done);
@@ -114,6 +117,7 @@ class MazeTest extends TestCase
         $env->render();
         $actions = [Maze::RIGHT,Maze::DOWN,Maze::RIGHT,Maze::DOWN];
         foreach($actions as $action) {
+            $action = $la->array($action,dtype:NDArray::int32);
             $env->step($action);
             $env->render();
         }

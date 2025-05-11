@@ -12,13 +12,18 @@ class Transform extends Attr
 {
     const RAD2DEG = 57.29577951308232;
 
-    protected $translation;
-    protected $rotation;
-    protected $scale;
+    /** @var array<float> $translation */
+    protected array $translation;
+    protected float $rotation;
+    /** @var array<float> $scale */
+    protected array $scale;
 
-
-    public function __construct($gl,
-        array $translation=null, float $rotation=null, array $scale=null)
+    /**
+     * @param ?array<float> $translation
+     * @param ?array<float> $scale
+     */
+    public function __construct(GL $gl,
+        ?array $translation=null, ?float $rotation=null, ?array $scale=null)
     {
         parent::__construct($gl);
         if($translation===null) {

@@ -6,14 +6,17 @@
 */
 namespace Rindow\RL\Gym\ClassicControl\Rendering;
 
+use Rindow\RL\Gym\Core\Graphics\GL;
+use Rindow\RL\Gym\Core\Graphics\Image as GLImage;
+
 class Image extends Geom
 {
-    protected $width;
-    protected $height;
-    protected $img;
-    protected $flip;
+    protected float $width;
+    protected float $height;
+    protected GLImage $img;
+    protected bool $flip;
 
-    public function __construct($gl, string $fname, float $width, float $height)
+    public function __construct(GL $gl, string $fname, float $width, float $height)
     {
         parent::__construct($gl);
         $this->set_color(1.0, 1.0, 1.0);

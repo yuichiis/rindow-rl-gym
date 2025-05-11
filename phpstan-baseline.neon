@@ -1,0 +1,13 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Function Rindow\\Math\\Matrix\\R not found\.$#'
+			identifier: function.notFound
+			count: 3
+			path: src/ClassicControl/Acrobot/AcrobotEnv.php
+
+		-
+			message: '#^Used function Rindow\\Math\\Matrix\\R not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: src/ClassicControl/Acrobot/AcrobotEnv.php

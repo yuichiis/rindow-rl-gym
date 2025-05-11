@@ -11,17 +11,19 @@ use Interop\Polite\Math\Matrix\NDArray;
 
 class Viewer
 {
-    protected $rendering;
-    protected $gl;
-    protected $width;
-    protected $height;
-    protected $window;
-    protected $isopen;
-    protected $geoms;
-    protected $onetime_geoms;
-    protected $transform;
+    protected ?Rendering $rendering;
+    protected ?GL $gl;
+    protected int $width;
+    protected int $height;
+    protected mixed $window;
+    protected bool $isopen;
+    /** @var array<Geom> $geoms */
+    protected array $geoms;
+    /** @var array<Geom> $onetime_geoms */
+    protected array $onetime_geoms;
+    protected Transform $transform;
 
-    public function __construct($rendering, int $width, int $height, $display=null)
+    public function __construct(Rendering $rendering, int $width, int $height, mixed $display=null)
     {
         $this->rendering = $rendering;
         $this->gl = $rendering->gl();
@@ -41,7 +43,7 @@ class Viewer
         $this->gl->glBlendFunc(GL::GL_SRC_ALPHA, GL::GL_ONE_MINUS_SRC_ALPHA);
     }
 
-    public function rendering()
+    public function rendering() : Rendering
     {
         return $this->rendering;
     }
@@ -84,7 +86,13 @@ class Viewer
         $this->onetime_geoms[] = $geom;
     }
 
-    public function render(string $mode=null)
+    /**
+     * mode:
+     *   'rgb_array': return NDArray of rgb array
+     *   'handler': return driver handler
+     *   others: return boolean: true=open, false=closed
+     */
+    public function render(?string $mode=null) : mixed
     {
         $this->gl->glClearColor(1, 1, 1, 1);
         $this->window->clear();
@@ -117,13 +125,13 @@ class Viewer
         return $this->isopen;
     }
 
-    public function show(bool $loop=null,int $delay=null) : void
+    public function show(?bool $loop=null,?int $delay=null) : void
     {
         $this->gl->show($loop, $delay);
     }
 
     # Convenience
-    public function draw_circle(float $radius=10, float $res=30, bool $filled=True, ...$attrs) : Geom
+    public function draw_circle(float $radius=10, float $res=30, bool $filled=True, mixed ...$attrs) : Geom
     {
         $geom = $this->rendering->make_circle($radius, $res, $filled);
         $this->add_attrs($geom, $attrs);
@@ -131,7 +139,10 @@ class Viewer
         return $geom;
     }
 
-    public function draw_polygon(array $v, bool $filled=true, ...$attrs) : Geom
+    /**
+     * @param array<array<float>> $v
+     */
+    public function draw_polygon(array $v, bool $filled=true, mixed ...$attrs) : Geom
     {
         $geom = $this->rendering->make_polygon($v, $filled);
         $this->add_attrs($geom, $attrs);
@@ -139,7 +150,10 @@ class Viewer
         return $geom;
     }
 
-    public function draw_polyline(array $v, ...$attrs) : Geom
+    /**
+     * @param array<array<float>> $v
+     */
+    public function draw_polyline(array $v, mixed ...$attrs) : Geom
     {
         $geom = $this->rendering->make_polyline($v);
         $this->add_attrs($geom, $attrs);
@@ -147,7 +161,11 @@ class Viewer
         return $geom;
     }
 
-    public function draw_line(array $start, array $end, ...$attrs) : Geom
+    /**
+     * @param array<float> $start
+     * @param array<float> $end
+     */
+    public function draw_line(array $start, array $end, mixed ...$attrs) : Geom
     {
         $geom = $this->rendering->Line($start, $end);
         $this->add_attrs($geom, $attrs);
@@ -163,6 +181,9 @@ class Viewer
         return $arr;
     }
 
+    /**
+     * @param array<string,mixed> $attrs
+     */
     protected function add_attrs(Geom $geom, array $attrs) : void
     {
         if(array_key_exists('color',$attrs)) {

@@ -10,11 +10,15 @@ use Rindow\RL\Gym\Core\Graphics\GL;
 
 class PolyLine extends Geom
 {
-    protected $v;
-    protected $close;
-    protected $linewidth;
+    /** @var array<array<float>> $v */
+    protected array $v;
+    protected bool $close;
+    protected LineWidth $linewidth;
 
-    public function __construct($gl, array $v, bool $close)
+    /**
+     * @param array<array<float>> $v
+     */
+    public function __construct(GL $gl, array $v, bool $close)
     {
         parent::__construct($gl);
         $this->v = $v;

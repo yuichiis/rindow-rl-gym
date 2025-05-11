@@ -6,13 +6,15 @@
 */
 namespace Rindow\RL\Gym\ClassicControl\Rendering;
 
+use Rindow\RL\Gym\Core\Graphics\GL;
+
 abstract class Attr
 {
-    abstract public function enable();
+    abstract public function enable() : void;
 
-    protected $gl;
+    protected GL $gl;
 
-    public function __construct($gl)
+    public function __construct(GL $gl)
     {
         $this->gl = $gl;
     }

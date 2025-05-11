@@ -1,11 +1,14 @@
 <?php
 namespace Rindow\RL\Gym\Core\Graphics;
 
+use GdImage;
+use RuntimeException;
+
 class Image
 {
-    protected $img;
+    protected ?GdImage $img=null;
 
-    public function load($fname)
+    public function load(string $fname) : void
     {
         $data = file_get_contents($fname);
         if($data===false) {
@@ -24,17 +27,17 @@ class Image
     //public function blit(int $centerx, int $centery, int $width, int $height)
     //{
     //}
-    public function img()
+    public function img() : ?GdImage
     {
         return $this->img;
     }
 
-    public function width()
+    public function width() : int
     {
         return imagesx($this->img);
     }
 
-    public function height()
+    public function height() : int
     {
         return imagesy($this->img);
     }

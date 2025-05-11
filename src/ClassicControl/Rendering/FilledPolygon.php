@@ -10,9 +10,13 @@ use Rindow\RL\Gym\Core\Graphics\GL;
 
 class FilledPolygon extends Geom
 {
-    public $v;
+    /** @var array<array<float>> */
+    public array $v;
 
-    public function __construct($gl, array $v)
+    /**
+     * @param array<array<float>> $v
+     */
+    public function __construct(GL $gl, array $v)
     {
         parent::__construct($gl);
         $this->v = $v;

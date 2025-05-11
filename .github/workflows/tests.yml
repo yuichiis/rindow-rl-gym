@@ -9,24 +9,40 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        php: ['8.1','8.2','8.3']
+        include:
+          - name: PHP8.1
+            os: ubuntu-latest
+            php: '8.1'
+            phpunit: '10.5'
+          - name: PHP8.4
+            os: ubuntu-latest
+            php: '8.4'
+            phpunit: '11.5'
   
     steps:
+      - name: Setup PHP ${{ matrix.php }}
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+          tools: composer, phpstan
+          ini-values: "memory_limit=512M"
+          extensions: gd, mbstring
+        env:
+          fail-fast: true
+
       - name: Checkout codes
         uses: "actions/checkout@v2"
 
       - name: Composer
-        uses: php-actions/composer@v6
-        with:
-          php_version: ${{ matrix.php }}
-          php_extensions: gd
+        run: |
+          composer update
+          composer require --dev phpunit/phpunit=^${{ matrix.phpunit }}
+
+      - name: PHP Static Analysys
+        run: phpstan
 
       - name: PHPUnit Tests
-        uses: php-actions/phpunit@v3
-        with:
-          configuration: tests/phpunit.xml
-          version: 10.5
-          php_version: ${{ matrix.php }}
-          php_extensions: gd
+        run: vendor/bin/phpunit -c tests
         env:
-          TRAVIS_PHP_VERSION: true
+          PLOT_RENDERER_SKIP: true

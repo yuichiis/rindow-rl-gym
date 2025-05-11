@@ -5,40 +5,53 @@ use LogicException;
 use RuntimeException;
 use Interop\Polite\Math\Matrix\NDArray;
 use Rindow\Math\Matrix\NDArrayPhp;
+use GdImage;
 
 class GDGL implements GL
 {
     const DEG2RAD = 0.017453292519943;
 
-    protected $la;
-    protected $currentMatrix;
-    protected $viewMatrix;
-    protected $stackMatrix = [];
-    protected $gd;
-    protected $width;
-    protected $height;
-    protected $color;
-    protected $clearColor;
-    protected $fgRealColor;
-    protected $bgRealColor;
-    protected $currentLineStippleFactor;
-    protected $currentLineStipplePattern;
+    protected object $la;
+    protected NDArray $currentMatrix;
+    protected ?NDArray $viewMatrix=null;
+    /** @var array<NDArray> $stackMatrix */
+    protected array $stackMatrix = [];
+    protected GdImage $gd;
+    protected int $width;
+    protected int $height;
+    /** @var array<int> $color */
+    protected array $color;
+    /** @var array<int> $clearColor */
+    protected array $clearColor;
+    protected int $fgRealColor;
+    protected int $bgRealColor;
+    protected int $currentLineStippleFactor;
+    protected int $currentLineStipplePattern;
 
-    protected $mode;
-    protected $points = [];
-    protected $prevRealPoint;
-    protected $firstRealPoint;
-    protected $cap = [];
-    protected $outputFiles = [];
-    protected $gifViewer = 'RINDOW_MATH_PLOT_VIEWER';
-    protected $blendSrcFactor;
-    protected $blendDstFactor;
-    protected $imagesDir;
-    protected $mkdir;
-    protected $skipCleaning = false;
-    protected $skipRunViewer = false;
+    protected ?int $mode=null;
+    /** @var array<array<int>> $points */
+    protected array $points = [];
+    protected ?NDArray $prevRealPoint;
+    protected ?NDArray $firstRealPoint;
+    /** @var array<int,bool> $cap */
+    protected array $cap = [];
+    /** @var array<string> $outputFiles */
+    protected array $outputFiles = [];
+    protected string $gifViewer = 'RINDOW_MATH_PLOT_VIEWER';
+    protected int $blendSrcFactor;
+    protected int $blendDstFactor;
+    protected string $imagesDir;
+    protected bool $mkdir = false;
+    protected bool $skipCleaning = false;
+    protected bool $skipRunViewer = false;
 
-    public function __construct($la,$config=null)
+    /**
+     * @param array<string,mixed> $config
+     */
+    public function __construct(
+        object $la,
+        ?array $config=null
+        )
     {
         $this->imagesDir = sys_get_temp_dir().'/rindow/rlgym';
         $this->setConfig($config);
@@ -55,7 +68,10 @@ class GDGL implements GL
         ]);
     }
 
-    protected function setConfig($config) : void
+    /**
+     * @param array<string,mixed> $config
+     */
+    protected function setConfig(?array $config) : void
     {
         //var_dump($config);
         if(isset($config['render.skipCleaning']) && $config['render.skipCleaning']) {
@@ -77,7 +93,7 @@ class GDGL implements GL
         $this->skipRunViewer = $switch;
     }
 
-    public function glViewport(int $orginX, int $orginY, int $width, int $height)
+    public function glViewport(int $orginX, int $orginY, int $width, int $height) : void
     {
         $this->viewMatrix = $this->la->array([
             [$width/2, 0,          0, $width/2+$orginX   ],
@@ -100,8 +116,11 @@ class GDGL implements GL
         $clipy2 = $this->height-1-$orginY;
         imagesetclip($this->gd,$clipx1,$clipy1,$clipx2,$clipy2);
     }
-    
-    protected function realCoordinate(array $point, bool $realMode=null)
+
+    /**
+     * @param array<float> $point
+     */
+    protected function realCoordinate(array $point, ?bool $realMode=null) : NDArray
     {
         $la = $this->la;
         array_push($point,1);
@@ -165,7 +184,7 @@ class GDGL implements GL
         $this->dispatchPolygon(false);
     }
 
-    protected function dispatchPolygon(bool $done)
+    protected function dispatchPolygon(bool $done) : void
     {
         switch($this->mode) {
             case GL::GL_POINTS: {
@@ -199,7 +218,7 @@ class GDGL implements GL
         }
     }
 
-    protected function currentRealColor()
+    protected function currentRealColor() : int
     {
         if(isset($this->cap[GL::GL_LINE_STIPPLE])) {
             return IMG_COLOR_STYLED;
@@ -207,7 +226,7 @@ class GDGL implements GL
         return $this->fgRealColor;
     }
 
-    protected function renderPoint()
+    protected function renderPoint() : void
     {
         if(count($this->points)<1) {
             return;
@@ -218,7 +237,7 @@ class GDGL implements GL
         imagesetpixel($this->gd,$point[0],$point[1],$color);
     }
 
-    protected function renderLine()
+    protected function renderLine() : void
     {
         if(count($this->points)<2) {
             return;
@@ -231,7 +250,7 @@ class GDGL implements GL
         imageline($this->gd,$start[0],$start[1],$end[0],$end[1],$color);
     }
 
-    protected function renderLineStrip($mode, bool $done)
+    protected function renderLineStrip(int $mode, bool $done) : void
     {
         if($done) {
             if($mode!=GL::GL_LINE_LOOP) {
@@ -257,7 +276,7 @@ class GDGL implements GL
         imageline($this->gd,$start[0],$start[1],$end[0],$end[1],$color);
     }
 
-    protected function renderPolygon($numVertex, bool $done)
+    protected function renderPolygon(?int $numVertex, bool $done) : void
     {
         if($done) {
             if($numVertex!==null) {
@@ -331,12 +350,15 @@ class GDGL implements GL
             imagelayereffect($this->gd, IMG_EFFECT_ALPHABLEND);
         } elseif ($sfactor==GL::GL_ZERO&&$dfactor==GL::GL_SRC_ALPHA) {
             imagelayereffect($this->gd, IMG_EFFECT_MULTIPLY);
-        } elseif ($sfactor==GL::GL_SRC_ONE&&$dfactor==GL::GL_ZERO) {
+        } elseif ($sfactor==GL::GL_ONE&&$dfactor==GL::GL_ZERO) {
             imagelayereffect($this->gd, IMG_EFFECT_REPLACE);
         }
     }
 
-    protected function transColor(float $red, float $green, float $blue, float $alpha)
+    /**
+     * @return array<int>
+     */
+    protected function transColor(float $red, float $green, float $blue, float $alpha) : array
     {
         $phpAlpha = (int)floor(min((1-$alpha)*128,127));
         return [
@@ -488,7 +510,7 @@ class GDGL implements GL
             0,0,                                /// dst pos
             (int)$src_x,(int)$src_y,            /// src pos
             (int)$exp_width,(int)$exp_height,   /// dst width
-            $width,$height                      /// src width
+            (int)$width,(int)$height                      /// src width
         );
         if($flip) {
             imageflip($expandedImg,IMG_FLIP_VERTICAL);
@@ -523,12 +545,12 @@ class GDGL implements GL
         imagedestroy($img);
     }
 
-    public function get_display($display)
+    public function get_display(mixed $display) : mixed
     {
         return null;
     }
 
-    public function createWindow($width, $height, $display)
+    public function createWindow(int $width, int $height, mixed $display) : Window
     {
         $this->gd = imagecreatetruecolor($width, $height);
         $this->width = $width;
@@ -547,9 +569,9 @@ class GDGL implements GL
         imageflip($this->gd,IMG_FLIP_VERTICAL);
     }
 
-    public function load_image($fname) : Image
+    public function load_image(string $fname) : Image
     {
-        $image = new Image($this->gd);
+        $image = new Image();
         $image->load($fname);
         return $image;
     }
@@ -598,7 +620,7 @@ class GDGL implements GL
         }
 
         $la = $this->la;
-        //$img = $la->alloc([$height,$width,$channels],NDArray::uint8);
+        //$img = $la->alloc([$height,$width,$channels],dtype:NDArray::uint8);
         $img = new NDArrayPhp(null,NDArray::uint8,[$height,$width,$channels],service:$la->service());
         $buffer = $img->buffer();
         if(method_exists($buffer,'load')) {
@@ -617,7 +639,7 @@ class GDGL implements GL
         return $img;
     }
 
-    public function show(bool $loop=null,int $delay=null) : void
+    public function show(?bool $loop=null, ?int $delay=null) : void
     {
         if(count($this->outputFiles)==0) {
             throw new LogicException('Image not found');
@@ -653,7 +675,7 @@ class GDGL implements GL
         $this->executeGifViewer($filename);
     }
 
-    protected function executeGifViewer($filename) : void
+    protected function executeGifViewer(string $filename) : void
     {
         if($this->skipRunViewer) {
             return;
@@ -661,12 +683,10 @@ class GDGL implements GL
         if($viewer = getenv($this->gifViewer)) {
             $filename = '"'.$viewer.'" '.$filename;
         }
-        if(!$this->skipRunViewer) {
-            system($filename);
-        }
+        system($filename);
     }
 
-    public function handler()
+    public function handler() : mixed
     {
         return $this->gd;
     }

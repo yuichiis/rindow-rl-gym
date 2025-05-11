@@ -7,14 +7,26 @@ use Interop\Polite\Math\Matrix\NDArray;
 
 class Box extends AbstractSpace
 {
-    protected $low;
-    protected $high;
+    protected NDArray $low;
+    protected NDArray $high;
 
-    public function __construct($la, $low, $high, array $shape=null, $dtype=null, int $seed=null)
+    /**
+     * @param array<int> $shape
+     */
+    public function __construct(
+        object $la, 
+        NDArray|float|int $low,
+        NDArray|float|int $high,
+        ?array $shape=null,
+        ?int $dtype=null,
+        ?int $seed=null
+        )
     {
-        if(is_scalar($low)&&is_scalar($high)&&$shape!==null) {
-            $low = $la->fill($low,$la->alloc($shape,$dtype));
-            $high = $la->fill($high,$la->alloc($shape,$dtype));
+        if(is_scalar($low)&&is_scalar($high)) {
+            $dtype ??= NDArray::float32;
+            $shape ??= [];
+            $low = $la->fill($low,$la->alloc($shape,dtype:$dtype));
+            $high = $la->fill($high,$la->alloc($shape,dtype:$dtype));
         } elseif($low instanceof NDArray&&$high instanceof NDArray) {
             if($low->shape()!=$high->shape()||$low->dtype()!=$high->dtype()) {
                 throw new InvalidArgumentException('Unmatch shape or dtype of min and max');
@@ -30,22 +42,22 @@ class Box extends AbstractSpace
         } else {
             throw new InvalidArgumentException('The specification of min and max is not unified');
         }
-        parent::__construct($la,$shape,$dtype,$seed);
+        parent::__construct($la,shape:$shape,dtype:$dtype,seed:$seed);
         $this->low = $low;
         $this->high = $high;
     }
 
-    public function high()
+    public function high() : NDArray
     {
         return $this->high;
     }
 
-    public function low()
+    public function low() : NDArray
     {
         return $this->low;
     }
 
-    public function sample()
+    public function sample() : NDArray
     {
         $la = $this->la;
         $low = $this->low;
@@ -65,28 +77,49 @@ class Box extends AbstractSpace
         return $value;
     }
 
-    public function contains($x,bool $throw=null,string $type=null)
+    public function contains(NDArray $x, ?bool $throw=null, ?string $type=null) : bool
     {
         $la = $this->la;
-        if(!($x instanceof NDArray)) {
-            throw new InvalidArgumentException('x must be NDArray');
-        }
         if($type===null) {
             $type = 'value';
         }
-        $error = $la->less($la->axpy($this->low,$la->copy($x),-1),0);
-        if($la->sum($error)) {
+        if($x->dtype()!==$this->dtype()) {
+            $xdtype = $la->dtypeToString($x->dtype());
+            $dtype = $la->dtypeToString($this->dtype());
+            throw new InvalidArgumentException("dtype of $type must be $dtype. $xdtype given.");
+        }
+        if($x->shape()!=$this->shape()) {
+            $xshape = implode(',',$x->shape());
+            $shape = implode(',',$this->shape());
+            throw new InvalidArgumentException("shape of $type must be ($shape). ($xshape) given.");
+        }
+        $error = $la->less($la->copy($x),$this->low);
+        if($la->scalar($la->sum($error))) {
             if($throw) {
-                $key = $la->imax($error);
-                throw new RuntimeException($type.'('.$key.') is too low.:'.$x[$key]);
+                $key = $la->iamax($error);
+                if($key instanceof NDArray) {
+                    $value = $la->gatherb($x,$key);
+                    $key = $la->scalar($key);
+                    $value = $la->scalar($value);
+                } else {
+                    $value = $x[$key];
+                }
+                throw new RuntimeException("The $type($key) is too low.:$value");
             }
             return false;
         }
-        $error = $la->greater($la->axpy($this->high,$la->copy($x),-1),0);
-        if($la->sum($error)) {
+        $error = $la->greater($la->copy($x),$this->high);
+        if($la->scalar($la->sum($error))) {
             if($throw) {
-                $key = $la->imax($error);
-                throw new RuntimeException($type.'('.$key.') is too high.:'.$x[$key]);
+                $key = $la->iamax($error);
+                if($key instanceof NDArray) {
+                    $value = $la->gatherb($x,$key);
+                    $key = $la->scalar($key);
+                    $value = $la->scalar($value);
+                } else {
+                    $value = $x[$key];
+                }
+                throw new RuntimeException("The $type($key) is too high.:$value");
             }
             return false;
         }

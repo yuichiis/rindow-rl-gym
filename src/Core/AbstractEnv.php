@@ -11,20 +11,25 @@ use Rindow\RL\Gym\Core\Spaces\Space;
 
 abstract class AbstractEnv implements Environment
 {
-    abstract protected function doStep($action) : array;
-    abstract protected function doReset();
+    /**
+     * {NDArray $observation, float $reward, bool $done, array<string,mixed> $info}
+     * @return array{NDArray, float, bool, array<string,mixed>}
+     */
+    abstract protected function doStep(NDArray $action) : array;
+    abstract protected function doReset() : NDArray;
 
-    protected $actionSpace;
-    protected $observationSpace;
-    protected $throwObservationSpaceError = false;
-    protected $maxEpisodeSteps = 0;
-    protected $elapsedSteps = 0;
-    protected $rewardThreshold = 0;   //  N/A
-    protected $la;
-    protected $viewer;
-    protected $metadata = [];
+    protected ?Space $actionSpace = null;
+    protected ?Space $observationSpace = null;
+    protected bool $throwObservationSpaceError = false;
+    protected int $maxEpisodeSteps = 0;
+    protected int $elapsedSteps = 0;
+    protected float $rewardThreshold = 0.0;   //  N/A
+    protected object $la;
+    protected ?object $viewer=null;
+    /** @var array<string,mixed> $metadata */
+    protected array $metadata = [];
 
-    public function __construct($la)
+    public function __construct(object $la)
     {
         $this->la = $la;
     }
@@ -39,27 +44,34 @@ abstract class AbstractEnv implements Environment
         return $this->rewardThreshold;
     }
 
-    public function observationSpace() : mixed
+    public function observationSpace() : ?Space
     {
         return $this->observationSpace;
     }
 
-    public function actionSpace() : mixed
+    public function actionSpace() : ?Space
     {
         return $this->actionSpace;
     }
 
+    /**
+     * @param array<string,mixed> $metadata
+     */
     protected function mergeMetadata(array $metadata) : void
     {
         $this->metadata = array_replace_recursive($this->metadata,$metadata);
     }
 
     /**
-    * @param Any $action
-    * @return Set(Any $observation, Any $reward, bool $done, Dict $info)
-    */
-    public function step($action) : array
+     * {NDArray $observation, float $reward, bool $done, array<string,mixed> $info}
+     * @return array{NDArray, float, bool, array<string,mixed>}
+     */
+    public function step(mixed $action) : array
     {
+        if(!($action instanceof NDArray)) {
+            $type = is_object($action) ? get_class($action) :gettype($action);
+            throw new InvalidArgumentException("Action must be NDArray. $type given.");
+        }
         $this->checkActionSpace($action);
         $results = $this->doStep($action);
         [$observation,$reward,$done,$info] = $results;
@@ -72,28 +84,22 @@ abstract class AbstractEnv implements Environment
         return [$observation,$reward,$done,$info];
     }
 
-    protected function setActionSpace($space) : void
+    protected function setActionSpace(Space $space) : void
     {
-        if(!($space instanceof Space)) {
-            throw new InvalidArgumentException('Action space is invalid type:'.gettype($space));
-        }
         $this->actionSpace = $space;
     }
 
-    protected function setObservationSpace($space) : void
+    protected function setObservationSpace(Space $space) : void
     {
-        if(!($space instanceof Space)) {
-            throw new InvalidArgumentException('Observation space is invalid type:'.gettype($space));
-        }
         $this->observationSpace = $space;
     }
 
-    public function setThrowObservationSpaceError(bool $switch)
+    public function setThrowObservationSpaceError(bool $switch) : void
     {
         $this->throwObservationSpaceError = $switch;
     }
 
-    protected function checkActionSpace($action) : void
+    protected function checkActionSpace(NDArray $action) : void
     {
         if($this->actionSpace===null) {
             return;
@@ -104,7 +110,7 @@ abstract class AbstractEnv implements Environment
         }
     }
 
-    protected function checkObsSpace($observation) : bool
+    protected function checkObsSpace(NDArray $observation) : bool
     {
         if($this->observationSpace===null) {
             return true;
@@ -119,11 +125,11 @@ abstract class AbstractEnv implements Environment
         return true;
     }
 
-    protected function checkSpace($space,$value,$type)
+    protected function checkSpace(Space $space, NDArray $value, string $type) : ?string
     {
         $la = $this->la;
         try {
-            $space->contains($value,$throw=true,$type);
+            $space->contains($value,throw:true,type:$type);
         } catch (RuntimeException $e) {
             return $e->getMessage();
         }
@@ -142,7 +148,7 @@ abstract class AbstractEnv implements Environment
     }
 
     /**
-    * @return Any $observation
+    * return NDArray $observation
     **/
     public function reset() : mixed
     {
@@ -151,17 +157,17 @@ abstract class AbstractEnv implements Environment
     }
 
     /**
-    * @return Any $depends on vender
+    * return mixed $depends on vender
     */
-    public function render(string $mode=null) : mixed
+    public function render(?string $mode=null) : mixed
     {
         throw new LogicException("Not implemented.");
     }
 
     /**
-    * @return Any $depends on vender
+    * return mixed $depends on vender
     */
-    public function show(bool $loop=null,int $delay=null) : mixed
+    public function show(?bool $loop=null,?int $delay=null) : mixed
     {
         if($this->viewer===null) {
             throw new LogicException('Viewer is not ready');
@@ -182,10 +188,9 @@ abstract class AbstractEnv implements Environment
     }
 
     /**
-    * @param int $seed
-    * @return List<int> $seeds
+    * @return array<int> $seeds
     */
-    public function seed(int $seed=null) : array
+    public function seed(?int $seed=null) : array
     {
         if($seed===null) {
             $seed = random_int(~PHP_INT_MAX,PHP_INT_MAX);
@@ -219,7 +224,7 @@ abstract class AbstractEnv implements Environment
     /**
     *
     */
-    public function exit(Throwable $e=null) : bool
+    public function exit(?Throwable $e=null) : bool
     {
         return true;
     }

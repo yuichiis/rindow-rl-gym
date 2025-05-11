@@ -5,21 +5,26 @@ use Rindow\RL\Gym\Core\Graphics\GDGL;
 
 class RenderFactory
 {
-    protected $drivers = [
+    /** @var array<string,string> $drivers */
+    protected array $drivers = [
         'gd' => GDGL::class,
     ];
-    protected $la;
-    protected $driverName;
-    protected $metadata;
+    protected object $la;
+    protected string $driverName;
+    /** @var array<string,mixed> $metadata */
+    protected ?array $metadata;
 
-    public function __construct($la,$driverName,$metadata=null)
+    /**
+     * @param array<string,mixed> $metadata
+     */
+    public function __construct(object $la, string $driverName, ?array $metadata=null)
     {
         $this->la = $la;
         $this->driverName = $driverName;
         $this->metadata = $metadata;
     }
 
-    public function factory()
+    public function factory() : Rendering
     {
         $driverName = $this->driverName;
         if(isset($this->drivers[$driverName])) {
@@ -30,7 +35,7 @@ class RenderFactory
         return $rendering;
     }
 
-    public function Viewer(int $width, int $height, $display=null)
+    public function Viewer(int $width, int $height, mixed $display=null) : Viewer
     {
         $rendering = $this->factory();
         return $rendering->Viewer($width, $height, $display);

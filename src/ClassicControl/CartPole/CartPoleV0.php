@@ -3,6 +3,6 @@ namespace Rindow\RL\Gym\ClassicControl\CartPole;
 
 class CartPoleV0 extends CartPoleEnv
 {
-    protected $maxEpisodeSteps=200;
-    protected $rewardThreshold=195.0;
+    protected int $maxEpisodeSteps=200;
+    protected float $rewardThreshold=195.0;
 }

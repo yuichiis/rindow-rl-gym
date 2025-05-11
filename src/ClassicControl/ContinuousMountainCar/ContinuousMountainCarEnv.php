@@ -57,29 +57,41 @@ use Rindow\RL\Gym\Core\AbstractEnv;
 use Rindow\RL\Gym\Core\Spaces\Discrete;
 use Rindow\RL\Gym\Core\Spaces\Box;
 use Rindow\RL\Gym\ClassicControl\Rendering\RenderFactory;
+use Rindow\RL\Gym\ClassicControl\Rendering\Transform;
+use Rindow\RL\Gym\ClassicControl\Rendering\Geom;
 
 class ContinuousMountainCarEnv extends AbstractEnv
 {
-    protected $metadata = ["render.modes"=> ["human", "rgb_array"], "video.frames_per_second"=> 30];
+    protected array $metadata = [
+        "render.modes"=> ["human", "rgb_array"],
+        "video.frames_per_second"=> 30
+    ];
 
-    protected $min_action = -1.0;
-    protected $max_action = 1.0;
-    protected $min_position = -1.2;
-    protected $max_position = 0.6;
-    protected $max_speed = 0.07;
+    protected float $min_action = -1.0;
+    protected float $max_action = 1.0;
+    protected float $min_position = -1.2;
+    protected float $max_position = 0.6;
+    protected float $max_speed = 0.07;
 
-    protected $goal_position = 0.45; # was 0.5 in gym, 0.45 in Arnaud de Broissia's version
-    protected $goal_velocity;
-    protected $power;
-    protected $low_state;
-    protected $high_state;
-    protected $state;
-    protected $renderingFactory;
-    protected $track;
-    protected $cartrans;
-    
+    protected float $goal_position = 0.45; # was 0.5 in gym, 0.45 in Arnaud de Broissia's version
+    protected float $goal_velocity;
+    protected float $power;
+    protected NDArray $low_state;
+    protected NDArray $high_state;
+    protected NDArray $state;
+    protected object $renderingFactory;
+    protected Geom $track;
+    protected Transform $cartrans;
 
-    public function __construct(object $la, $goal_velocity=0, array $metadata=null, object $renderer=null)
+    /**
+     * @param array<string,mixed> $metadata
+     */
+    public function __construct(
+        object $la, 
+        float $goal_velocity=0,
+        ?array $metadata=null,
+        ?object $renderer=null
+    )
     {
         parent::__construct($la);
         if($metadata) {
@@ -93,14 +105,14 @@ class ContinuousMountainCarEnv extends AbstractEnv
         $this->power = 0.0015;
 
         $this->low_state = $la->array(
-            [$this->min_position, -$this->max_speed], NDArray::float32
+            [$this->min_position, -$this->max_speed], dtype:NDArray::float32
         );
         $this->high_state = $la->array(
-            [$this->max_position, $this->max_speed], NDArray::float32
+            [$this->max_position, $this->max_speed], dtype:NDArray::float32
         );
 
         $this->setActionSpace( new Box($la,
-            $this->min_action, $this->max_action, shape:[1], dtype:NDArray::float32
+            $this->min_action, $this->max_action, shape:[], dtype:NDArray::float32
         ));
         $this->setObservationSpace( new Box($la,
             $this->low_state, $this->high_state, dtype:NDArray::float32
@@ -109,15 +121,12 @@ class ContinuousMountainCarEnv extends AbstractEnv
         $this->seed();
     }
 
-    /**
-    * @param Any $action
-    * @return Set(Any $observation, Any $rewards, bool $done, Dict $info)
-    */
-    protected function doStep($action) : array
+    protected function doStep(NDArray $action) : array
     {
         $la = $this->la;
+        $action = $la->scalar($action);
         [$position, $velocity] = $this->state;
-        $force = min(max($action[0], $this->min_action), $this->max_action);
+        $force = min(max($action, $this->min_action), $this->max_action);
 
         $velocity += $force * $this->power - 0.0025 * cos(3 * $position);
         if($velocity > $this->max_speed) {
@@ -144,25 +153,24 @@ class ContinuousMountainCarEnv extends AbstractEnv
         if($done) {
             $reward = 100.0;
         }
-        $reward -= pow($action[0], 2) * 0.1;
+        $reward -= pow($action, 2) * 0.1;
 
-        $this->state = [$position, $velocity];
-        $state = $la->array($this->state, $dtype=NDArray::float32);
-        return [$state, $reward, $done, []];
+        $this->state = $la->array([$position, $velocity], dtype:NDArray::float32);
+        return [$this->state, $reward, $done, []];
     }
 
     /**
-    * @return Any $observation
+    * return $observation
     **/
-    protected function doReset()
+    protected function doReset() : NDArray
     {
         $la = $this->la;
         $position = $la->randomUniform([1],$low=-0.6, $high=-0.4);
-        $this->state = [$position[0], 0];
-        return $la->array($this->state, $dtype=NDArray::float32);
+        $this->state = $la->array([$position[0], 0]);
+        return $this->state;
     }
 
-    protected function height($xs)
+    protected function height(float|NDArray $xs) : float|NDArray
     {
         $la = $this->la;
         if($xs instanceof NDArray) {
@@ -174,8 +182,9 @@ class ContinuousMountainCarEnv extends AbstractEnv
         }
     }
 
-    public function render($mode="human") : mixed
+    public function render(?string $mode=null) : mixed
     {
+        $mode ??= "human";
         $la = $this->la;
         $screen_width = 600;
         $screen_height = 400;

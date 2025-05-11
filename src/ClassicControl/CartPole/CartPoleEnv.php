@@ -61,32 +61,39 @@ use Rindow\RL\Gym\Core\AbstractEnv;
 use Rindow\RL\Gym\Core\Spaces\Discrete;
 use Rindow\RL\Gym\Core\Spaces\Box;
 use Rindow\RL\Gym\ClassicControl\Rendering\RenderFactory;
+use Rindow\RL\Gym\ClassicControl\Rendering\Transform;
+use Rindow\RL\Gym\ClassicControl\Rendering\Geom;
+use Rindow\RL\Gym\ClassicControl\Rendering\Line;
+use Rindow\RL\Gym\ClassicControl\Rendering\FilledPolygon;
 
 class CartPoleEnv extends AbstractEnv
 {
-    protected $metadata = ["render.modes"=> ["human", "rgb_array"], "video.frames_per_second"=> 50];
+    protected array $metadata = ["render.modes"=> ["human", "rgb_array"], "video.frames_per_second"=> 50];
 
-    protected $gravity = 9.8;
-    protected $masscart = 1.0;
-    protected $masspole = 0.1;
-    protected $length = 0.5; # actually half the pole's length
-    protected $force_mag = 10.0;
-    protected $tau = 0.02;  # seconds between state updates;
-    protected $kinematics_integrator = "euler";
-    protected $renderingFactory;
-    protected $carttrans;
-    protected $poletrans;
-    protected $total_mass;
-    protected $polemass_length;
-    protected $theta_threshold_radians;
-    protected $x_threshold;
-    protected $state;
-    protected $steps_beyond_done;
-    protected $axle;
-    protected $track;
-    protected $pole_geom;
+    protected float $gravity = 9.8;
+    protected float $masscart = 1.0;
+    protected float $masspole = 0.1;
+    protected float $length = 0.5; # actually half the pole's length
+    protected float $force_mag = 10.0;
+    protected float $tau = 0.02;  # seconds between state updates;
+    protected string $kinematics_integrator = "euler";
+    protected object $renderingFactory;
+    protected Transform $carttrans;
+    protected Transform $poletrans;
+    protected float $total_mass;
+    protected float $polemass_length;
+    protected float $theta_threshold_radians;
+    protected float $x_threshold;
+    protected ?NDArray $state=null;
+    protected ?int $steps_beyond_done=null;
+    protected Geom $axle;
+    protected Line $track;
+    protected FilledPolygon $pole_geom;
 
-    public function __construct(object $la, array $metadata=null, object $renderer=null)
+    /**
+     * @param array<string,mixed> $metadata
+     */
+    public function __construct(object $la, ?array $metadata=null, ?object $renderer=null)
     {
         parent::__construct($la);
         if($metadata) {
@@ -112,7 +119,7 @@ class CartPoleEnv extends AbstractEnv
                 $this->theta_threshold_radians * 2,
                 INF,
             ],
-            NDArray::float32,
+            dtype:NDArray::float32,
         );
         $min = $la->scal(-1.0,$la->copy($high));
         $this->setObservationSpace(new Box($la,$min,$high));
@@ -125,15 +132,12 @@ class CartPoleEnv extends AbstractEnv
         $this->steps_beyond_done = null;
     }
 
-    /**
-    * @param Any $action
-    * @return Set(Any $observation, Any $rewards, bool $done, Dict $info)
-    */
-    protected function doStep($action) : array
+    protected function doStep(NDArray $action) : array
     {
         //err_msg = "%r (%s) invalid" % (action, type(action))
         //assert self.action_space.contains(action), err_msg
 
+        $action = $this->la->scalar($action);
         [$x, $x_dot, $theta, $theta_dot] = $this->state;
         $force = ($action == 1) ? ($this->force_mag) : (-$this->force_mag);
         $costheta = cos($theta);
@@ -161,7 +165,10 @@ class CartPoleEnv extends AbstractEnv
             $theta = $theta + $this->tau * $theta_dot;
         }
 
-        $this->state = [$x, $x_dot, $theta, $theta_dot];
+        $this->state = $this->la->array(
+            [$x, $x_dot, $theta, $theta_dot],
+            dtype:NDArray::float32
+        );
 
         $done =
             $x < -$this->x_threshold
@@ -187,14 +194,13 @@ class CartPoleEnv extends AbstractEnv
             $this->steps_beyond_done += 1;
             $reward = 0.0;
         }
-        return [$this->la->array($this->state, NDArray::float32),
-                $reward, $done, []];
+        return [$this->state,$reward, $done, []];
     }
 
     /**
-    * @return Any $observation
+    * return $observation
     **/
-    protected function doReset()
+    protected function doReset() : NDArray
     {
         $la = $this->la;
         $this->state = $la->randomUniform([4],$low=-0.05, $high=0.05);
@@ -202,8 +208,9 @@ class CartPoleEnv extends AbstractEnv
         return $this->state;
     }
 
-    public function render($mode="human") : mixed
+    public function render(?string $mode=null) : mixed
     {
+        $mode ??= "human";
         $screen_width = 600;
         $screen_height = 400;
 
@@ -263,10 +270,10 @@ class CartPoleEnv extends AbstractEnv
         ];
         $pole->v = [[$l, $b], [$l, $t], [$r, $t], [$r, $b]];
 
-        $x = $this->state;
-        $cartx = $x[0] * $scale + $screen_width / 2.0;  # MIDDLE OF CART
+        [$x, $x_dot, $theta, $theta_dot] = $this->state;
+        $cartx = $x * $scale + $screen_width / 2.0;  # MIDDLE OF CART
         $this->carttrans->set_translation($cartx, $carty);
-        $this->poletrans->set_rotation(-$x[2]);
+        $this->poletrans->set_rotation(-$theta);
 
         return $this->viewer->render($mode);
     }

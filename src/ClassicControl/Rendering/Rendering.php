@@ -6,21 +6,24 @@
 */
 namespace Rindow\RL\Gym\ClassicControl\Rendering;
 
+use Rindow\RL\Gym\Core\Graphics\GL;
+use Rindow\RL\Gym\Core\Graphics\Window;
+
 class Rendering
 {
-    protected $gl;
+    protected ?GL $gl;
 
-    public function __construct($gl)
+    public function __construct(GL $gl)
     {
         $this->gl = $gl;
     }
 
-    public function gl()
+    public function gl() : GL
     {
         return $this->gl;
     }
 
-    public function get_window(int $width, int $height, $display)
+    public function get_window(int $width, int $height, mixed $display) : Window
     {
         $window = $this->gl->createWindow($width, $height, $display);
         $this->gl->glTranslatef(-1, -1, 0);
@@ -36,22 +39,33 @@ class Rendering
     // ==============
     // Attrs
     // ==============
-    public function Color(array $vec4)
+    /**
+     * @param array<float> $vec4
+     */
+    public function Color(array $vec4) : Color
     {
         return new Color($this->gl,$vec4);
     }
 
-    public function LineStyle(int $style)
+    public function LineStyle(int $style) : LineStyle
     {
         return new LineStyle($this->gl, $style);
     }
 
-    public function LineWidth(float $stroke)
+    public function LineWidth(float $stroke) : LineWidth
     {
         return new LineWidth($this->gl, $stroke);
     }
 
-    public function Transform(array $translation=null, float $rotation=null, array $scale=null)
+    /**
+     * @param ?array<float> $translation
+     * @param ?array<float> $scale
+     */
+    public function Transform(
+        ?array $translation=null,
+        ?float $rotation=null,
+        ?array $scale=null
+        ) : Transform
     {
         return new Transform($this->gl, $translation, $rotation, $scale);
     }
@@ -59,32 +73,45 @@ class Rendering
     // ==============
     // geoms
     // ==============
-    public function Compound(array $gs)
+    /**
+     * @param array<Geom> $gs
+     */
+    public function Compound(array $gs) : Compound
     {
         return new Compound($this->gl,$gs);
     }
 
-    public function FilledPolygon(array $v)
+    /**
+     * @param array<array<float>> $v
+     */
+    public function FilledPolygon(array $v) : FilledPolygon
     {
         return new FilledPolygon($this->gl,$v);
     }
 
-    public function Image(string $fname, float $width, float $height)
+    public function Image(string $fname, float $width, float $height) : Image
     {
         return new Image($this->gl, $fname, $width, $height);
     }
 
-    public function Line(array $start=null, array $end=null)
+    /**
+     * @param array<float> $start
+     * @param array<float> $end
+     */
+    public function Line(?array $start=null, ?array $end=null) : Line
     {
         return new Line($this->gl, $start, $end);
     }
 
-    public function Point()
+    public function Point() : Point
     {
         return new Point($this->gl);
     }
 
-    public function PolyLine(array $v, bool $close)
+    /**
+     * @param array<array<float>> $v
+     */
+    public function PolyLine(array $v, bool $close) : PolyLine
     {
         return new PolyLine($this->gl, $v, $close);
     }
@@ -92,12 +119,12 @@ class Rendering
     // ==============
     // viewer
     // ==============
-    public function Viewer(int $width, int $height, $display=null)
+    public function Viewer(int $width, int $height, mixed $display=null) : Viewer
     {
         return new Viewer($this, $width, $height, $display);
     }
 
-    public function make_circle(float $radius=10, float $res=30, bool $filled=true)
+    public function make_circle(float $radius=10, float $res=30, bool $filled=true) : Geom
     {
         $points = [];
         for($i=0;$i<$res;$i++) {
@@ -111,7 +138,10 @@ class Rendering
         }
     }
 
-    public function make_polygon(array $v, bool $filled=true)
+    /**
+     * @param array<array<float>> $v
+     */
+    public function make_polygon(array $v, bool $filled=true) : Geom
     {
         if($filled) {
             return new FilledPolygon($this->gl, $v);
@@ -120,12 +150,15 @@ class Rendering
         }
     }
 
-    public function make_polyline(array $v)
+    /**
+     * @param array<array<float>> $v
+     */
+    public function make_polyline(array $v) : Geom
     {
         return new PolyLine($this->gl, $v, false);
     }
 
-    public function make_capsule(float $length, float $width)
+    public function make_capsule(float $length, float $width) : Geom
     {
         [$l, $r, $t, $b] = [0, $length, $width / 2, -$width / 2];
         $box = $this->make_polygon([[$l, $b], [$l, $t], [$r, $t], [$r, $b]]);

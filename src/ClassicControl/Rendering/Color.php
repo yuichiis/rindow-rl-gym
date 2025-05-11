@@ -6,11 +6,17 @@
 */
 namespace Rindow\RL\Gym\ClassicControl\Rendering;
 
+use Rindow\RL\Gym\Core\Graphics\GL;
+
 class Color extends Attr
 {
-    public $vec4;
+    /** @var array<float> $vec4 */
+    public array $vec4;
 
-    public function __construct($gl,array $vec4)
+    /**
+     * @param array<float> $vec4
+     */
+    public function __construct(GL $gl,array $vec4)
     {
         parent::__construct($gl);
         $this->vec4 = $vec4;

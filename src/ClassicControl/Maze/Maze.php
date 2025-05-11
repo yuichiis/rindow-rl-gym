@@ -4,6 +4,8 @@ namespace Rindow\RL\Gym\ClassicControl\Maze;
 use Rindow\RL\Gym\Core\AbstractEnv;
 use Rindow\RL\Gym\Core\Spaces\Discrete;
 use Rindow\RL\Gym\ClassicControl\Rendering\RenderFactory;
+use Rindow\RL\Gym\ClassicControl\Rendering\Transform;
+use Rindow\RL\Gym\ClassicControl\Rendering\Geom;
 use Interop\Polite\Math\Matrix\NDArray;
 use InvalidArgumentException;
 use RuntimeException;
@@ -11,30 +13,34 @@ use LogicException;
 
 class Maze extends AbstractEnv
 {
-    protected $metadata = ["render.modes"=> ["human", "rgb_array"], "video.frames_per_second"=> 50];
+    protected array $metadata = ["render.modes"=> ["human", "rgb_array"], "video.frames_per_second"=> 50];
 
     const UP    = 0;
     const DOWN  = 1;
     const RIGHT = 2;
     const LEFT  = 3;
 
-    protected $maxEpisodeSteps=500;
+    protected int $maxEpisodeSteps=500;
 
-    protected $la;
-    protected $policy;               // List<float>
-    protected $observation;
-    protected $throwInvalidAction = true;
-    protected $renderingFactory;
-    protected $width;
-    protected $height;
-    protected $exit;
-    protected $man;
-    protected $mantrans;
+    protected object $la;
+    protected NDArray $policy;
+    protected ?int $observation=null;
+    protected bool $throwInvalidAction = true;
+    protected object $renderingFactory;
+    protected int $width;
+    protected int $height;
+    protected int $exit;
+    protected Geom $man;
+    protected Transform $mantrans;
 
-    public function __construct(object $la,NDArray $policy,
+    /**
+     * @param array<string,mixed> $metadata
+     */
+    public function __construct(
+        object $la,NDArray $policy,
         int $width,int $height,int $exit,
-        int $throwInvalidAction=null,int $maxEpisodeSteps=null,
-        array $metadata=null, object $renderer=null)
+        ?int $throwInvalidAction=null,?int $maxEpisodeSteps=null,
+        ?array $metadata=null, ?object $renderer=null)
     {
         parent::__construct($la);
         if($metadata) {
@@ -65,12 +71,10 @@ class Maze extends AbstractEnv
         $this->setThrowObservationSpaceError(true);
     }
 
-    /**
-    * @param Any $action
-    * @return Set(Any $observation, Any $reward, bool $done, Dict $info)
-    */
-    protected function doStep($action) : array
+    protected function doStep(NDArray $action) : array
     {
+        $la = $this->la;
+        $action = $la->scalar($action);
         $observation = $this->observation;
         if($this->exit==$observation) {
             throw new LogicException('Please do after reset');
@@ -79,16 +83,18 @@ class Maze extends AbstractEnv
             if($this->throwInvalidAction) {
                 throw new RuntimeException('Unauthorized action: s='.$observation.',a='.$action);
             }
+            $observation = $la->array($observation,dtype:NDArray::int32);
             return [$observation,$reward=-1.0,$done=true,[]];
         }
         $observation = $this->nextStep($observation,$action);
         $this->observation = $observation;
         $done = ($this->exit==$observation);
         $reward = -1.0;
+        $observation = $la->array($observation,dtype:NDArray::int32);
         return [$observation,$reward,$done,[]];
     }
 
-    protected function nextStep($position,$action)
+    protected function nextStep(int $position, int $action) : int
     {
         switch ($action) {
             case self::UP:
@@ -104,17 +110,16 @@ class Maze extends AbstractEnv
         }
     }
 
-    /**
-    * @return Any $observation
-    **/
-    protected function doReset()
+    protected function doReset() : NDArray
     {
         $this->observation = 0;
-        return $this->observation;
+        $observation = $this->la->array($this->observation,dtype:NDArray::int32);
+        return $observation;
     }
 
-    public function render($mode="human") : mixed
+    public function render(?string $mode=null) : mixed
     {
+        $mode ??= "human";
         $policy = $this->policy;
         $width = $this->width;
         $height = $this->height;

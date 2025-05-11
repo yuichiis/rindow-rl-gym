@@ -3,12 +3,12 @@ namespace Rindow\RL\Gym\Core\Graphics;
 
 class Window
 {
-    protected $gl;
-    protected $width;
-    protected $height;
-    protected $display;
+    protected ?GL $gl;
+    protected int $width;
+    protected int $height;
+    protected mixed $display;
 
-    public function __construct($gl, $width, $height, $display)
+    public function __construct(GL $gl, int $width, int $height, mixed $display)
     {
         $this->gl = $gl;
         $this->width = $width;
@@ -16,25 +16,25 @@ class Window
         $this->display = $display;
     }
 
-    public function close()
+    public function close() : void
     {
         $this->gl = null;
     }
 
-    public function clear()
+    public function clear() : void
     {
         $this->gl->clear();
     }
 
-    public function switch_to()
+    public function switch_to() : void
     {
     }
 
-    public function dispatch_events()
+    public function dispatch_events() : void
     {
     }
 
-    public function flip()
+    public function flip() : void
     {
         $this->gl->flip();
     }

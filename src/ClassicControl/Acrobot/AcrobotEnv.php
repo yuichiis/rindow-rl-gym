@@ -65,9 +65,10 @@ use function Rindow\Math\Matrix\R;
 
 class AcrobotEnv extends AbstractEnv
 {
-    protected $metadata = ["render.modes"=> ["human", "rgb_array"], "video.frames_per_second"=> 15];
+    /** @var array<string,mixed> $metadata */
+    protected array $metadata = ["render.modes"=> ["human", "rgb_array"], "video.frames_per_second"=> 15];
 
-    public $dt = 0.2;
+    public float $dt = 0.2;
     const LINK_LENGTH_1 = 1.0;  # [m]
     const LINK_LENGTH_2 = 1.0;  # [m]
     const LINK_MASS_1 = 1.0;    #: [kg] mass of link 1
@@ -79,21 +80,25 @@ class AcrobotEnv extends AbstractEnv
     const MAX_VEL_1 = 4 * M_PI;
     const MAX_VEL_2 = 9 * M_PI;
 
-    protected $AVAIL_TORQUE = [-1.0, 0.0, +1];
+    /** @var array<float> $AVAIL_TORQUE */
+    protected array $AVAIL_TORQUE = [-1.0, 0.0, +1];
 
-    public $torque_noise_max = 0.0;
+    public float $torque_noise_max = 0.0;
 
     #: use dynamics equations from the nips paper or the book
-    public $book_or_nips = "book";
-    public $action_arrow = null;
-    public $domain_fig = null;
-    public $actions_num = 3;
+    public string $book_or_nips = "book";
+    public ?object $action_arrow = null;
+    public ?object $domain_fig = null;
+    public int $actions_num = 3;
 
-    protected $state;
+    protected ?NDArray $state;
 
-    protected $renderingFactory;
+    protected object $renderingFactory;
 
-    public function __construct(object $la, array $metadata=null, object $renderer=null)
+    /**
+     * @param array<string,mixed> $metadata
+     */
+    public function __construct(object $la, ?array $metadata=null, ?object $renderer=null)
     {
         parent::__construct($la);
         if($metadata) {
@@ -104,7 +109,7 @@ class AcrobotEnv extends AbstractEnv
         }
         $this->renderingFactory = $renderer;
         $high = $la->array(
-            [1.0, 1.0, 1.0, 1.0, self::MAX_VEL_1, self::MAX_VEL_2], NDArray::float32
+            [1.0, 1.0, 1.0, 1.0, self::MAX_VEL_1, self::MAX_VEL_2], dtype:NDArray::float32
         );
         $low = $la->scal(-1.0,$la->copy($high));
         $this->setObservationSpace(new Box($la,$low,$high));
@@ -114,24 +119,22 @@ class AcrobotEnv extends AbstractEnv
     }
 
     /**
-    * @return Any $observation
+    * @return NDArray $observation
     **/
-    protected function doReset()
+    protected function doReset() : NDArray
     {
         $la = $this->la;
-        $this->state = $la->randomUniform([4],$low=-0.1, $high=0.1);
+        $this->state = $la->randomUniform([4],-0.1, 0.1); // (shape,low,high)
+
         return $this->get_ob();
     }
 
-    /**
-    * @param Any $action
-    * @return Set(Any $observation, Any $rewards, bool $done, Dict $info)
-    */
-    public function doStep($a) : array
+    public function doStep(NDArray $action) : array
     {
         $la = $this->la;
         $s = $this->state;
-        $torque = $this->AVAIL_TORQUE[$a];
+        $action = $la->scalar($action);
+        $torque = $this->AVAIL_TORQUE[$action];
 
         # Add noise to the force action
         if($this->torque_noise_max > 0) {
@@ -144,6 +147,7 @@ class AcrobotEnv extends AbstractEnv
         
         // append torque to s
         $slen = count($s);
+        /** @var NDArray $s_augmented */
         $s_augmented = $la->alloc([$slen+1]);
         $la->copy($s,$s_augmented[R(0,$slen)]);
         $s_augmented[$slen] = $torque;
@@ -160,12 +164,12 @@ class AcrobotEnv extends AbstractEnv
         return [$this->get_ob(), $reward, $terminal, []];
     }
 
-    protected function get_ob()
+    protected function get_ob() : NDArray
     {
         $la = $this->la;
         $s = $this->state;
         return $la->array(
-            [cos($s[0]), sin($s[0]), cos($s[1]), sin($s[1]), $s[2], $s[3]], NDArray::float32
+            [cos($s[0]), sin($s[0]), cos($s[1]), sin($s[1]), $s[2], $s[3]], dtype:NDArray::float32
         );
     }
 
@@ -175,7 +179,10 @@ class AcrobotEnv extends AbstractEnv
         return (-cos($s[0]) - cos($s[1] + $s[0]) > 1.0);
     }
 
-    public function _dsdt($s_augmented)
+    /**
+     * @return array<float>
+     */
+    public function _dsdt(NDArray $s_augmented) : array
     {
         $la = $this->la;
         $m1 = self::LINK_MASS_1;
@@ -221,8 +228,9 @@ class AcrobotEnv extends AbstractEnv
         return [$dtheta1, $dtheta2, $ddtheta1, $ddtheta2, 0.0];
     }
 
-    public function render($mode="human") : mixed
+    public function render(?string $mode=null) : mixed
     {
+        $mode ??= "human";
         //from gym.envs.classic_control import rendering
         $la = $this->la;
 
@@ -284,7 +292,7 @@ class AcrobotEnv extends AbstractEnv
             x: a scalar, wrapped
         """
     */
-    public function wrap($x, $m, $M)
+    public function wrap(float $x, float $m, float $M) : float
     {
         $diff = $M - $m;
         while($x > $M) {
@@ -307,7 +315,10 @@ class AcrobotEnv extends AbstractEnv
             x: scalar, bound between min (m) and Max (M)
         """
      */
-    public function bound($x, $m, $M=null)
+    /**
+     * @param array<float>|float $m
+     */
+    public function bound(float $x, array|float $m, ?float $M=null) : float
     {
         if($M===null) {
             $M = $m[1];
@@ -350,14 +361,17 @@ class AcrobotEnv extends AbstractEnv
         yout: Runge-Kutta approximation of the ODE
     """
     */
+    /**
+     * @param array<float> $t
+     */
     public function rk4(callable $derivs, NDArray|float $y0, array $t) : NDArray
     {
         $la = $this->la;
         if(is_numeric($y0)) {
-            $yout = $la->alloc([count($t), 1], NDArray::float32);
+            $yout = $la->alloc([count($t), 1], dtype:NDArray::float32);
             $yout[0][0] = $y0;
         } else {
-            $yout = $la->alloc([count($t), count($y0)], NDArray::float32);
+            $yout = $la->alloc([count($t), count($y0)], dtype:NDArray::float32);
             $yout[0] = $y0;
         }
 

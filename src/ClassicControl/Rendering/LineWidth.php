@@ -6,17 +6,19 @@
 */
 namespace Rindow\RL\Gym\ClassicControl\Rendering;
 
+use Rindow\RL\Gym\Core\Graphics\GL;
+
 class LineWidth extends Attr
 {
-    public $stroke;
+    public float $stroke;
 
-    public function __construct($gl, float $stroke)
+    public function __construct(GL $gl, float $stroke)
     {
         parent::__construct($gl);
         $this->stroke = $stroke;
     }
 
-    public function enable()
+    public function enable() : void
     {
         $this->gl->glLineWidth($this->stroke);
     }

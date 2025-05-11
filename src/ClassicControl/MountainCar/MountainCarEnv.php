@@ -56,26 +56,36 @@ use Rindow\RL\Gym\Core\AbstractEnv;
 use Rindow\RL\Gym\Core\Spaces\Discrete;
 use Rindow\RL\Gym\Core\Spaces\Box;
 use Rindow\RL\Gym\ClassicControl\Rendering\RenderFactory;
+use Rindow\RL\Gym\ClassicControl\Rendering\Transform;
+use Rindow\RL\Gym\ClassicControl\Rendering\Geom;
 
 class MountainCarEnv extends AbstractEnv
 {
-    protected $metadata = ["render.modes"=> ["human", "rgb_array"], "video.frames_per_second"=> 30];
+    protected array $metadata = ["render.modes"=> ["human", "rgb_array"], "video.frames_per_second"=> 30];
 
-    protected $min_position = -1.2;
-    protected $max_position = 0.6;
-    protected $max_speed = 0.07;
-    protected $goal_position = 0.5;
-    protected $force = 0.001;
-    protected $gravity = 0.0025;
-    protected $renderingFactory;
-    protected $goal_velocity;
-    protected $low;
-    protected $high;
-    protected $state;
-    protected $track;
-    protected $cartrans;
+    protected float $min_position = -1.2;
+    protected float $max_position = 0.6;
+    protected float $max_speed = 0.07;
+    protected float $goal_position = 0.5;
+    protected float $force = 0.001;
+    protected float $gravity = 0.0025;
+    protected object $renderingFactory;
+    protected float $goal_velocity;
+    protected NDArray $low;
+    protected NDArray $high;
+    /** @var array<float> $state */
+    protected array $state;
+    protected Geom $track;
+    protected Transform $cartrans;
 
-    public function __construct(object $la, int $goal_velocity=0, array $metadata=null, object $renderer=null)
+    /**
+     * @param array<string,mixed> $metadata
+     */
+    public function __construct(
+        object $la, 
+        float $goal_velocity=0,
+        ?array $metadata=null,
+        ?object $renderer=null)
     {
         parent::__construct($la);
         if($metadata) {
@@ -86,18 +96,14 @@ class MountainCarEnv extends AbstractEnv
         }
         $this->renderingFactory = $renderer;
         $this->goal_velocity = $goal_velocity;
-        $this->low = $la->array([$this->min_position, -$this->max_speed], NDArray::float32);
-        $this->high = $la->array([$this->max_position, $this->max_speed], NDArray::float32);
+        $this->low = $la->array([$this->min_position, -$this->max_speed], dtype:NDArray::float32);
+        $this->high = $la->array([$this->max_position, $this->max_speed], dtype:NDArray::float32);
         $this->setActionSpace(new Discrete($la, 3));
         $this->setObservationSpace(new Box($la, $this->low, $this->high, [2], NDArray::float32));
         $this->seed();
     }
 
-    /**
-    * @param Any $action
-    * @return Set(Any $observation, Any $rewards, bool $done, Dict $info)
-    */
-    protected function doStep($action) : array
+    protected function doStep(NDArray $action) : array
     {
         $la = $this->la;
         //assert self.action_space.contains(action), "%r (%s) invalid" % (
@@ -105,6 +111,7 @@ class MountainCarEnv extends AbstractEnv
         //    type(action),
         //)
 
+        $action = $la->scalar($action);
         [$position, $velocity] = $this->state;
         $velocity += ($action - 1) * $this->force + cos(3 * $position) * (-$this->gravity);
         $velocity = min(max($velocity, -$this->max_speed), $this->max_speed);
@@ -118,22 +125,19 @@ class MountainCarEnv extends AbstractEnv
         $reward = -1.0;
 
         $this->state = [$position, $velocity];
-        $state = $la->array($this->state, $dtype=NDArray::float32);
+        $state = $la->array($this->state, dtype:NDArray::float32);
         return [$state, $reward, $done, []];
     }
 
-    /**
-    * @return Any $observation
-    **/
-    protected function doReset()
+    protected function doReset() : NDArray
     {
         $la = $this->la;
         $position = $la->randomUniform([1],$low=-0.6, $high=-0.4);
         $this->state = [$position[0], 0];
-        return $la->array($this->state, $dtype=NDArray::float32);
+        return $la->array($this->state, dtype:NDArray::float32);
     }
 
-    protected function height($xs)
+    protected function height(float|NDArray $xs) : float|NDArray
     {
         $la = $this->la;
         if($xs instanceof NDArray) {
@@ -145,8 +149,9 @@ class MountainCarEnv extends AbstractEnv
         }
     }
 
-    public function render($mode="human") : mixed
+    public function render(?string $mode=null) : mixed
     {
+        $mode ??= "human";
         $la = $this->la;
         $screen_width = 600;
         $screen_height = 400;

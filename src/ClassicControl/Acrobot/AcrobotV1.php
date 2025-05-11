@@ -3,6 +3,6 @@ namespace Rindow\RL\Gym\ClassicControl\Acrobot;
 
 class AcrobotV1 extends AcrobotEnv
 {
-    protected $rewardThreshold=-100.0;
-    protected $maxEpisodeSteps=500;
+    protected float $rewardThreshold=-100.0;
+    protected int $maxEpisodeSteps=500;
 }

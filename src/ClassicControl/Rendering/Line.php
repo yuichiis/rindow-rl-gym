@@ -10,11 +10,17 @@ use Rindow\RL\Gym\Core\Graphics\GL;
 
 class Line extends Geom
 {
-    protected $start;
-    protected $end;
-    protected $linewidth;
+    /** @var array<float> $start */
+    protected array $start;
+    /** @var array<float> $end */
+    protected array $end;
+    protected LineWidth $linewidth;
 
-    public function __construct($gl, array $start=null, array $end=null)
+    /**
+     * @param array<float> $start
+     * @param array<float> $end
+     */
+    public function __construct(GL $gl, ?array $start=null, ?array $end=null)
     {
         parent::__construct($gl);
         if($start===null) {

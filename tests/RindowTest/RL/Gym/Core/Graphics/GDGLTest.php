@@ -24,7 +24,7 @@ class GDGLTest extends TestCase
     {
         return [
             'render.skipCleaning' => true,
-            'render.skipRunViewer' => getenv('TRAVIS_PHP_VERSION') ? true : false,
+            'render.skipRunViewer' => getenv('PLOT_RENDERER_SKIP') ? true : false,
         ];
     }
 
@@ -644,7 +644,7 @@ class GDGLTest extends TestCase
     {
         return [
             'renderer.skipCleaning' => true,
-            'renderer.skipRunViewer' => getenv('TRAVIS_PHP_VERSION') ? true : false,
+            'renderer.skipRunViewer' => getenv('PLOT_RENDERER_SKIP') ? true : false,
         ];
     }
 

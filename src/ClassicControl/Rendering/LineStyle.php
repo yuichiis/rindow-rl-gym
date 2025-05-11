@@ -10,9 +10,9 @@ use Rindow\RL\Gym\Core\Graphics\GL;
 
 class LineStyle extends Attr
 {
-    protected $style;
+    protected int $style;
 
-    public function __construct($gl, int $style)
+    public function __construct(GL $gl, int $style)
     {
         parent::__construct($gl);
         $this->style = $style;

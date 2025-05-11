@@ -25,7 +25,7 @@ class MountainCarTest extends TestCase
     {
         return [
             'render.skipCleaning' => true,
-            'render.skipRunViewer' => getenv('TRAVIS_PHP_VERSION') ? true : false,
+            'render.skipRunViewer' => getenv('PLOT_RENDERER_SKIP') ? true : false,
         ];
     }
 
@@ -57,7 +57,7 @@ class MountainCarTest extends TestCase
         $actionShape = $actionSpace->shape();
         $actionDtype = $actionSpace->dtype();
         $this->assertEquals([],$actionShape);
-        $this->assertEquals(null,$actionDtype);
+        $this->assertEquals(NDArray::int32,$actionDtype);
         $this->assertIsInt($actionSpace->n());
         $this->assertEquals(3,$actionSpace->n());
 
@@ -67,7 +67,8 @@ class MountainCarTest extends TestCase
         $this->assertEquals($obsShape,$obs->shape());
 
         // step
-        $res = $env->step(0);
+        $action = $la->array(0,dtype:NDArray::int32);
+        $res = $env->step($action);
         $this->assertIsArray($res);
         $this->assertCount(4,$res);
         [$obs,$reward,$done,$info] = $res;
@@ -94,7 +95,8 @@ class MountainCarTest extends TestCase
         $env->reset();
         $env->render();
         for($i=0;$i<10;$i++) {
-            $env->step(0);
+            $action = $la->array(0,dtype:NDArray::int32);
+            $env->step($action);
             $env->render();
         }
         $env->show();

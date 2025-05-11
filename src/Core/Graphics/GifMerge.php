@@ -488,4 +488,3 @@ class GifMerge
         return $this->fout;
     }
 }
-?>
