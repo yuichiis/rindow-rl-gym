@@ -9,17 +9,6 @@ abstract class AbstractSpace implements Space
     /** @var array<int> */
     protected array $shape;
     protected int $dtype;
-    /** @var array<int,string> $dtypeToString */
-    protected array $dtypeToString = [
-        NDArray::bool=>'bool',
-        NDArray::int8=>'int8',   NDArray::uint8=>'uint8',
-        NDArray::int16=>'int16', NDArray::uint16=>'uint16',
-        NDArray::int32=>'int32', NDArray::uint32=>'uint32',
-        NDArray::int64=>'int64', NDArray::uint64=>'uint64',
-        NDArray::float16=>'float16',
-        NDArray::float32=>'float32', NDArray::float64=>'float64',
-        NDArray::complex64=>'complex64', NDArray::complex128=>'complex128',
-    ];
 
     /**
      * @param array<int> $shape
@@ -56,14 +45,6 @@ abstract class AbstractSpace implements Space
     public function dtype() : int
     {
         return $this->dtype;
-    }
-
-    protected function dtypeToString(int $dtype) : string
-    {
-        if(!isset($this->dtypeToString[$dtype])) {
-            return 'Unknown';
-        }
-        return $this->dtypeToString[$dtype];
     }
 
 }
