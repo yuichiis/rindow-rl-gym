@@ -18,6 +18,7 @@ if(file_exists("$addpack/rindow-math-matrix-$workingbranch/composer.json")) {
     $loader->addPsr4('Interop\\Polite\\Math\\', "$addpack/polite-math-master/src");
     $loader->addPsr4('Interop\\Polite\\AI\\',   "$addpack/polite-ai-main/src");
     $loader->addPsr4('Rindow\\Math\\Matrix\\',  "$addpack/rindow-math-matrix-$workingbranch/src");
+    $loader->addPsr4('Rindow\\Math\\Plot\\',  "$addpack/rindow-math-plot-$workingbranch/src");
 }
 if(file_exists("$addpack/rindow-math-matrix-matlibffi-$workingbranch/composer.json")) {
     $loader->addPsr4('Rindow\\Math\\Matrix\\Drivers\\MatlibFFI\\', "$addpack/rindow-math-matrix-matlibffi-$workingbranch/src");

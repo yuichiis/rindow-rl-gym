@@ -121,6 +121,9 @@ jobs:
           wget https://github.com/${{ env.owner }}/rindow-math-matrix/archive/refs/heads/${{ env.workspace }}.zip
           unzip ${{ env.workspace }}.zip
           rm ${{ env.workspace }}.zip
+          wget https://github.com/${{ env.owner }}/rindow-math-plot/archive/refs/heads/${{ env.workspace }}.zip
+          unzip ${{ env.workspace }}.zip
+          rm ${{ env.workspace }}.zip
           WORKING_BRANCH=${{ env.workspace }}; export WORKING_BRANCH
           ADD_PACK=`pwd`; export ADD_PACK
           echo "WORKING_BRANCH=${WORKING_BRANCH}" > $GITHUB_OUTPUT
@@ -141,6 +144,9 @@ jobs:
           curl https://github.com/${{ env.owner }}/rindow-math-matrix/archive/refs/heads/${{ env.workspace }}.zip -O -L
           unzip ${{ env.workspace }}.zip
           rm ${{ env.workspace }}.zip
+          curl https://github.com/${{ env.owner }}/rindow-math-plot/archive/refs/heads/${{ env.workspace }}.zip -O -L
+          unzip ${{ env.workspace }}.zip
+          rm ${{ env.workspace }}.zip
   
       - name: Download Requirements (Windows)
         if: ${{ startsWith(matrix.os, 'windows-') }}
@@ -151,6 +157,8 @@ jobs:
           Expand-Archive -Path main.zip -DestinationPath ${{ env.workspace }}
           Invoke-WebRequest -Uri https://github.com/${{ env.owner }}/rindow-math-matrix/archive/refs/heads/${{ env.workspace }}.zip  -OutFile ${{ env.workspace }}3.zip
           Expand-Archive -Path ${{ env.workspace }}3.zip -DestinationPath ${{ env.workspace }}
+          Invoke-WebRequest -Uri https://github.com/${{ env.owner }}/rindow-math-plot/archive/refs/heads/${{ env.workspace }}.zip  -OutFile ${{ env.workspace }}4.zip
+          Expand-Archive -Path ${{ env.workspace }}4.zip -DestinationPath ${{ env.workspace }}
 
       - name: Download Add-packs (Linux)
         if: ${{ startsWith(matrix.os, 'ubuntu-') }}
