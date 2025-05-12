@@ -122,8 +122,10 @@ jobs:
           rm ${{ env.workspace }}.zip
           WORKING_BRANCH=${{ env.workspace }}; export WORKING_BRANCH
           ADD_PACK=`pwd`; export ADD_PACK
-          echo "WORKING_BRANCH=${WORKING_BRANCH}" >> $GITHUB_OUTPUT
+          echo "WORKING_BRANCH=${WORKING_BRANCH}" > $GITHUB_OUTPUT
           echo "ADD_PACK=${ADD_PACK}"             >> $GITHUB_OUTPUT
+          echo "Extracted branch: ${WORKING_BRANCH}"
+          echo "Extracted to: ${ADD_PACK}"
 
       - name: Download Requirements (macOS)
         if: ${{ startsWith(matrix.os, 'macos-') }}
