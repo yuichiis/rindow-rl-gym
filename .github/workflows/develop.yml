@@ -66,39 +66,39 @@ jobs:
           coverage: none
           tools: composer, phpstan
           ini-values: "memory_limit=512M"
-          extensions: gd, mbstring
+          extensions: gd, mbstring, ${{ matrix.ffi }}
         env:
           fail-fast: true
 
-      #- name: Install Libs (Linux)
-      #  if: ${{ startsWith(matrix.os, 'ubuntu-') && matrix.ffi == 'ffi' }}
-      #  run: |
-      #    sudo apt install -y libopenblas0 liblapacke
-      #    wget https://github.com/${{ env.matlibrepo }}/releases/download/${{ env.testlib }}/rindow-matlib_${{ env.matlib }}-`lsb_release -sr`_amd64.deb
-      #    sudo apt install -y ./rindow-matlib_${{ env.matlib }}-`lsb_release -sr`_amd64.deb
+      - name: Install Libs (Linux)
+        if: ${{ startsWith(matrix.os, 'ubuntu-') && matrix.ffi == 'ffi' }}
+        run: |
+          sudo apt install -y libopenblas0 liblapacke
+          wget https://github.com/${{ env.matlibrepo }}/releases/download/${{ env.testlib }}/rindow-matlib_${{ env.matlib }}-`lsb_release -sr`_amd64.deb
+          sudo apt install -y ./rindow-matlib_${{ env.matlib }}-`lsb_release -sr`_amd64.deb
 
-      #- name: Install Libs (macOS)
-      #  if: ${{ startsWith(matrix.os, 'macos-') && matrix.ffi == 'ffi' }}
-      #  run: |
-      #    # brew install libomp
-      #    curl https://github.com/${{ env.matlibrepo }}/releases/download/${{ env.testlib }}/rindow-matlib-${{ env.matlib }}-Darwin-${{ matrix.arch }}.tar.gz -O -L
-      #    tar -xzf rindow-matlib-${{ env.matlib }}-Darwin-${{ matrix.arch }}.tar.gz
-      #    sudo cp -r usr/include /usr/local/
-      #    sudo cp -r usr/lib /usr/local/
+      - name: Install Libs (macOS)
+        if: ${{ startsWith(matrix.os, 'macos-') && matrix.ffi == 'ffi' }}
+        run: |
+          # brew install libomp
+          curl https://github.com/${{ env.matlibrepo }}/releases/download/${{ env.testlib }}/rindow-matlib-${{ env.matlib }}-Darwin-${{ matrix.arch }}.tar.gz -O -L
+          tar -xzf rindow-matlib-${{ env.matlib }}-Darwin-${{ matrix.arch }}.tar.gz
+          sudo cp -r usr/include /usr/local/
+          sudo cp -r usr/lib /usr/local/
 
-      #- name: Install Libs (Windows)
-      #  if: ${{ startsWith(matrix.os, 'windows-') && matrix.ffi == 'ffi' }}
-      #  run: |
-      #    Invoke-WebRequest -Uri https://github.com/OpenMathLib/OpenBLAS/releases/download/v0.3.27/OpenBLAS-0.3.27-x64.zip -OutFile openblas.zip
-      #    Expand-Archive -Path openblas.zip
-      #    Invoke-WebRequest -Uri https://github.com/${{ env.matlibrepo }}/releases/download/${{ env.testlib }}/rindow-matlib-${{ env.matlib }}-win64.zip -OutFile matlib.zip
-      #    Expand-Archive -Path matlib.zip
-      #    $currentDir = (Get-Location).Path
-      #    dir $currentDir
-      #    $OpenBLAS_DIR = Join-Path -Path $currentDir -ChildPath 'openblas'
-      #    dir $OpenBLAS_DIR/bin
-      #    $matlibDir = Join-Path -Path $currentDir -ChildPath 'matlib'
-      #    dir $matlibDir/bin
+      - name: Install Libs (Windows)
+        if: ${{ startsWith(matrix.os, 'windows-') && matrix.ffi == 'ffi' }}
+        run: |
+          Invoke-WebRequest -Uri https://github.com/OpenMathLib/OpenBLAS/releases/download/v0.3.27/OpenBLAS-0.3.27-x64.zip -OutFile openblas.zip
+          Expand-Archive -Path openblas.zip
+          Invoke-WebRequest -Uri https://github.com/${{ env.matlibrepo }}/releases/download/${{ env.testlib }}/rindow-matlib-${{ env.matlib }}-win64.zip -OutFile matlib.zip
+          Expand-Archive -Path matlib.zip
+          $currentDir = (Get-Location).Path
+          dir $currentDir
+          $OpenBLAS_DIR = Join-Path -Path $currentDir -ChildPath 'openblas'
+          dir $OpenBLAS_DIR/bin
+          $matlibDir = Join-Path -Path $currentDir -ChildPath 'matlib'
+          dir $matlibDir/bin
 
       - name: Checkout codes
         uses: "actions/checkout@v4"
