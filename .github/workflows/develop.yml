@@ -106,7 +106,7 @@ jobs:
       - name: Install phpunit (${{ matrix.name }})
         if: ${{ !startsWith(matrix.os, 'windows-') }}
         run: |
-          mv comopser.json composer.json.backup
+          mv composer.json composer.json.backup
           composer require --dev phpunit/phpunit=^${{ matrix.phpunit }}
 
       - name: Download Requirements (Linux)
