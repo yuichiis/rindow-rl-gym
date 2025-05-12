@@ -120,6 +120,10 @@ jobs:
           wget https://github.com/${{ env.owner }}/rindow-math-matrix/archive/refs/heads/${{ env.workspace }}.zip
           unzip ${{ env.workspace }}.zip
           rm ${{ env.workspace }}.zip
+          WORKING_BRANCH=${{ env.workspace }}; export WORKING_BRANCH
+          ADD_PACK=`pwd`; export ADD_PACK
+          echo "WORKING_BRANCH=${WORKING_BRANCH}" >> $GITHUB_OUTPUT
+          echo "ADD_PACK=${ADD_PACK}"             >> $GITHUB_OUTPUT
 
       - name: Download Requirements (macOS)
         if: ${{ startsWith(matrix.os, 'macos-') }}
