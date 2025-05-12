@@ -216,7 +216,7 @@ jobs:
         run: |
           WORKING_BRANCH=${{ env.workspace }}; export WORKING_BRANCH
           ADD_PACK=`pwd`; export ADD_PACK
-          vendor/bin/phpunit -c tests/checkadvanced.xml
+          vendor/bin/phpunit -c tests
 
       - name: PHPUnit Tests (Windows)
         if: ${{ startsWith(matrix.os, 'windows-') }}
@@ -232,5 +232,5 @@ jobs:
           dir $matlibDir/bin
           $env:WORKING_BRANCH = "${{ env.workspace }}"
           $env:ADD_PACK = "$currentDir/${{ env.workspace }}"
-          vendor/bin/phpunit -c tests/checkadvanced.xml
+          vendor/bin/phpunit -c tests
 
