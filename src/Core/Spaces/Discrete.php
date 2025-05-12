@@ -33,7 +33,7 @@ class Discrete extends AbstractSpace
             $type = 'value';
         }
         if(!$la->isInt($x)) {
-            $dtype = $la->dtypeToString($x->dtype());
+            $dtype = $this->dtypeToString($x->dtype());
             throw new InvalidArgumentException("$type must be integer. $dtype given.");
         }
         if($x->size()!=1) {

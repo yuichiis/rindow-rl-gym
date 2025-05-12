@@ -84,8 +84,8 @@ class Box extends AbstractSpace
             $type = 'value';
         }
         if($x->dtype()!==$this->dtype()) {
-            $xdtype = $la->dtypeToString($x->dtype());
-            $dtype = $la->dtypeToString($this->dtype());
+            $xdtype = $this->dtypeToString($x->dtype());
+            $dtype = $this->dtypeToString($this->dtype());
             throw new InvalidArgumentException("dtype of $type must be $dtype. $xdtype given.");
         }
         if($x->shape()!=$this->shape()) {
