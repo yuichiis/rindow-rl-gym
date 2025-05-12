@@ -14,6 +14,7 @@ if(!file_exists(__DIR__.'/tmp')) {
 $addpack = getenv('ADD_PACK');
 $workingbranch = getenv('WORKING_BRANCH');
 if(file_exists("$addpack/rindow-math-matrix-$workingbranch/composer.json")) {
+    $loader->addPsr4('Rindow\\RL\\Gym\\',__DIR__.'/../src');
     $loader->addPsr4('Interop\\Polite\\Math\\', "$addpack/polite-math-master/src");
     $loader->addPsr4('Interop\\Polite\\AI\\',   "$addpack/polite-ai-main/src");
     $loader->addPsr4('Rindow\\Math\\Matrix\\',  "$addpack/rindow-math-matrix-$workingbranch/src");
