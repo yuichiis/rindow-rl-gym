@@ -217,6 +217,8 @@ jobs:
           WORKING_BRANCH=${{ env.workspace }}; export WORKING_BRANCH
           ADD_PACK=`pwd`; export ADD_PACK
           vendor/bin/phpunit -c tests
+        env:
+          PLOT_RENDERER_SKIP: true
 
       - name: PHPUnit Tests (Windows)
         if: ${{ startsWith(matrix.os, 'windows-') }}
@@ -233,4 +235,6 @@ jobs:
           $env:WORKING_BRANCH = "${{ env.workspace }}"
           $env:ADD_PACK = "$currentDir/${{ env.workspace }}"
           vendor/bin/phpunit -c tests
+        env:
+          PLOT_RENDERER_SKIP: true
 
