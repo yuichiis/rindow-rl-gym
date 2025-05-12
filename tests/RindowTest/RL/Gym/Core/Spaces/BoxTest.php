@@ -104,10 +104,10 @@ class BoxTest extends TestCase
         $la = $this->newLa($mo);
 
         $space = new Box($la,$la->array([0,1]),$la->array([4,5]));
-        $lower = $la->array([-0.1, 0.0],dtype:NDArray::float32);
+        $lower = $la->array([-0.125, 0.0],dtype:NDArray::float32);
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('observation(0) is too low.:-0.1');
+        $this->expectExceptionMessage('observation(0) is too low.:-0.125');
         $space->contains($lower, throw:true, type:'observation');
     }
 
@@ -117,10 +117,10 @@ class BoxTest extends TestCase
         $la = $this->newLa($mo);
 
         $space = new Box($la,$la->array([0,1]),$la->array([4,5]));
-        $higher = $la->array([0.0, 5.1],dtype:NDArray::float32);
+        $higher = $la->array([0.0, 5.125],dtype:NDArray::float32);
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('observation(1) is too high.:5.1');
+        $this->expectExceptionMessage('observation(1) is too high.:5.125');
         $space->contains($higher, throw:true, type:'observation');
     }
 
