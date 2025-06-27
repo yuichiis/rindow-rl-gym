@@ -156,18 +156,20 @@ class ContinuousMountainCarEnv extends AbstractEnv
         $reward -= pow($action, 2) * 0.1;
 
         $this->state = $la->array([$position, $velocity], dtype:NDArray::float32);
-        return [$this->state, $reward, $done, []];
+        $observation = $this->state;
+        $truncated = false;
+        return [$observation, $reward, $done, $truncated, []];
     }
 
     /**
-    * return $observation
+    * return array{NDArray $observation,array<mixed> $info}
     **/
-    protected function doReset() : NDArray
+    protected function doReset() : array
     {
         $la = $this->la;
         $position = $la->randomUniform([1],$low=-0.6, $high=-0.4);
         $this->state = $la->array([$position[0], 0]);
-        return $this->state;
+        return [$this->state,[]];
     }
 
     protected function height(float|NDArray $xs) : float|NDArray

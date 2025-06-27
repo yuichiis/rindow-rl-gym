@@ -125,16 +125,20 @@ class MountainCarEnv extends AbstractEnv
         $reward = -1.0;
 
         $this->state = [$position, $velocity];
-        $state = $la->array($this->state, dtype:NDArray::float32);
-        return [$state, $reward, $done, []];
+        $observation = $la->array($this->state, dtype:NDArray::float32);
+        $truncated = false;
+        return [$observation, $reward, $done, $truncated, []];
     }
 
-    protected function doReset() : NDArray
+    /**
+    * return array{NDArray $observation,array<mixed> $info}
+    **/
+    protected function doReset() : array
     {
         $la = $this->la;
         $position = $la->randomUniform([1],$low=-0.6, $high=-0.4);
         $this->state = [$position[0], 0];
-        return $la->array($this->state, dtype:NDArray::float32);
+        return [$la->array($this->state, dtype:NDArray::float32),[]];
     }
 
     protected function height(float|NDArray $xs) : float|NDArray

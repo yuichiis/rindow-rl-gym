@@ -3,7 +3,7 @@ namespace Rindow\RL\Gym\Core\Spaces;
 
 use Interop\Polite\Math\Matrix\NDArray;
 
-abstract class AbstractSpace implements Space
+abstract class AbstractSpace
 {
     protected object $la;
     /** @var array<int> */
@@ -15,18 +15,12 @@ abstract class AbstractSpace implements Space
      */
     public function __construct(
         object $la,
-        ?array $shape=null,
-        ?int $dtype=null,
+        array $shape,
+        int $dtype,
         ?int $seed=null
     )
     {
         $this->la = $la;
-        if($shape===null) {
-            $shape = [];
-        }
-        if($dtype===null) {
-            $dtype = NDArray::int32;
-        }
         $this->shape = $shape;
         $this->dtype = $dtype;
         if($seed!==null) {

@@ -88,17 +88,24 @@ class PendulumEnv extends AbstractEnv
         $newth = $th + $newthdot * $dt;
 
         $this->state = [$newth, $newthdot];
-        return [$this->get_obs(), -$costs, false, []];
+        $observation = $this->get_obs();
+        $reward = -$costs;
+        $done = false;
+        $truncated = false;
+        return [$observation, $reward, $done, $truncated, []];
     }
 
-    public function doReset() : NDArray
+    /**
+    * return array{NDArray $observation,array<mixed> $info}
+    **/
+    protected function doReset() : array
     {
         $la = $this->la;
         $theta = $la->randomUniform([],-M_PI,M_PI);
         $thetadot = $la->randomUniform([],-1,1);
         $this->state = [$la->scalar($theta),$la->scalar($thetadot)];
         $this->last_u = null;
-        return $this->get_obs();
+        return [$this->get_obs(),[]];
     }
 
     protected function get_obs() : NDArray

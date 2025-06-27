@@ -24,6 +24,8 @@ class Maze extends AbstractEnv
 
     protected object $la;
     protected NDArray $policy;
+    protected int $numStates;
+    protected int $numActions;
     protected ?int $observation=null;
     protected bool $throwInvalidAction = true;
     protected object $renderingFactory;
@@ -53,6 +55,9 @@ class Maze extends AbstractEnv
         if($policy->ndim()!=2) {
             throw new InvalidArgumentException('policy must be 2D NDArray');
         }
+        if($policy->dtype()!==NDArray::bool) {
+            throw new InvalidArgumentException('policy must be bool NDArray');
+        }
         if($throwInvalidAction===null) {
             $throwInvalidAction = true;
         }
@@ -65,6 +70,8 @@ class Maze extends AbstractEnv
             $this->maxEpisodeSteps = $maxEpisodeSteps;
         }
         [$states,$actions] = $policy->shape();
+        $this->numStates = $states;
+        $this->numActions = $actions;
         $this->reset();
         $this->setActionSpace(new Discrete($la,$actions));
         $this->setObservationSpace(new Discrete($la,$states));
@@ -79,19 +86,28 @@ class Maze extends AbstractEnv
         if($this->exit==$observation) {
             throw new LogicException('Please do after reset');
         }
-        if(!($this->policy[$observation][$action]>0)) {
+        $valid_actions = $this->policy[$observation];
+        if($action>=$this->numActions || $action<0) {
+            throw new LogicException("Invalid action: $action");
+        }
+        if(!$valid_actions[$action]) {
             if($this->throwInvalidAction) {
                 throw new RuntimeException('Unauthorized action: s='.$observation.',a='.$action);
             }
             $observation = $la->array($observation,dtype:NDArray::int32);
-            return [$observation,$reward=-1.0,$done=true,[]];
+            return [$observation,$reward=-1.0,$done=true,$truncated=false,['error'=>'Unauthorized action']];
         }
         $observation = $this->nextStep($observation,$action);
+        if($observation>=$this->numStates || $observation<0) {
+            throw new LogicException("Invalid observation: $observation");
+        }
         $this->observation = $observation;
         $done = ($this->exit==$observation);
         $reward = -1.0;
         $observation = $la->array($observation,dtype:NDArray::int32);
-        return [$observation,$reward,$done,[]];
+        $truncated = false;
+        $valid_actions = $this->policy[$this->observation];
+        return [$observation,$reward,$done,$truncated,['validActions'=>$valid_actions]];
     }
 
     protected function nextStep(int $position, int $action) : int
@@ -110,11 +126,15 @@ class Maze extends AbstractEnv
         }
     }
 
-    protected function doReset() : NDArray
+    /**
+    * return array{NDArray $observation,array<mixed> $info}
+    **/
+    protected function doReset() : array
     {
         $this->observation = 0;
         $observation = $this->la->array($this->observation,dtype:NDArray::int32);
-        return $observation;
+        $valid_actions = $this->policy[$this->observation];
+        return [$observation,['validActions'=>$valid_actions]];
     }
 
     public function render(?string $mode=null) : mixed
@@ -146,7 +166,7 @@ class Maze extends AbstractEnv
                 for($x=0;$x<$width;$x++) {
                     $pos = $y*$width+$x;
                     foreach ($policy[$pos] as $key => $value) {
-                        if($value==1) {
+                        if($value) {
                             continue;
                         }
                         [$s,$e] = $wall_lines[$key];

@@ -28,6 +28,7 @@ class Slots extends AbstractEnv
         foreach ($probabilities as $p) {
             $this->thresholds[] = (int)floor($p * getrandmax());
         }
+        $this->setObservationSpace(new Discrete($la,1));
         $this->setActionSpace(new Discrete($la,count($this->thresholds)));
         $this->num = count($this->thresholds);
         $this->obs = $la->array(0,dtype:NDArray::int32);
@@ -47,16 +48,18 @@ class Slots extends AbstractEnv
         } else {
             $reward = 0.0;
         }
-        // [obs, reward, done, info]
-        return [$this->obs,$reward,true,[]];
+        $observation = $this->obs;
+        $done = true;
+        $truncated = false;
+        return [$observation, $reward, $done, $truncated, []];
      }
 
     /**
-    * return $observation
+    * return array{NDArray $observation,array<mixed> $info}
     **/
-    protected function doReset() : NDArray
+    protected function doReset() : array
     {
-        return $this->obs;
+        return [$this->obs,[]];
     }
 
 }

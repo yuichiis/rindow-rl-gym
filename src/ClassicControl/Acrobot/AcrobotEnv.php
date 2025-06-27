@@ -119,14 +119,14 @@ class AcrobotEnv extends AbstractEnv
     }
 
     /**
-    * @return NDArray $observation
+    * return array{NDArray $observation,array<mixed> $info}
     **/
-    protected function doReset() : NDArray
+    protected function doReset() : array
     {
         $la = $this->la;
         $this->state = $la->randomUniform([4],-0.1, 0.1); // (shape,low,high)
 
-        return $this->get_ob();
+        return [$this->get_ob(),[]];
     }
 
     public function doStep(NDArray $action) : array
@@ -159,9 +159,11 @@ class AcrobotEnv extends AbstractEnv
         $ns[2] = $this->bound($ns[2], -self::MAX_VEL_1, self::MAX_VEL_1);
         $ns[3] = $this->bound($ns[3], -self::MAX_VEL_2, self::MAX_VEL_2);
         $this->state = $ns;
+        $observation = $this->get_ob();
         $terminal = $this->terminal();
         $reward = ($terminal)? 0.0 : -1.0;
-        return [$this->get_ob(), $reward, $terminal, []];
+        $truncated = false;
+        return [$observation, $reward, $terminal, $truncated, []];
     }
 
     protected function get_ob() : NDArray

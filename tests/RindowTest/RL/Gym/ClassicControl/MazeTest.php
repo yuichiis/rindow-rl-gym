@@ -31,18 +31,25 @@ class MazeTest extends TestCase
 
     public function newRules($la)
     {
+        // +-+-+-+
+        // |0 1 2|
+        // + + +-+
+        // |3|4 5|
+        // + +-+ +
+        // |6 7|8|
+        // +-+-+-+
         $mazeRules = $la->array([
         //   UP    DOWN  RIGHT LEFT
-            [NAN,    1,    1,  NAN], // 0  +-+-+-+
-            [NAN,    1,    1,    1], // 1  |0 1 2|
-            [NAN,  NAN,  NAN,    1], // 2  + + +-+
-            [  1,    1,  NAN,  NAN], // 3  |3|4 5|
-            [  1,  NAN,    1,  NAN], // 4  + +-+ +
-            [NAN,    1,  NAN,    1], // 5  |6 7|8|
-            [  1,  NAN,    1,  NAN], // 6  +-+-+-+
-            [NAN,  NAN,  NAN,    1], // 7
-            [  1,  NAN,  NAN,  NAN], // 8
-        ]);
+            [false,  true,  true, false], // 0  
+            [false,  true,  true,  true], // 1  
+            [false, false, false,  true], // 2  
+            [ true,  true, false, false], // 3  
+            [ true, false,  true, false], // 4  
+            [false,  true, false,  true], // 5  
+            [ true, false,  true, false], // 6  
+            [false, false, false,  true], // 7
+            [ true, false, false, false], // 8
+        ],dtype:NDArray::bool);
         [$width,$height,$exit] = [3,3,8];
         return [$mazeRules,$width,$height,$exit];
     }
@@ -80,23 +87,29 @@ class MazeTest extends TestCase
         $this->assertEquals($actionN,$actionSpace->n());
 
         // reset
-        $obs = $env->reset();
+        [$obs,$info] = $env->reset();
         $this->assertInstanceof(NDArray::class,$obs);
         $this->assertEquals(NDArray::int32,$obs->dtype());
         $this->assertEquals(0,$la->scalar($obs));
+        $this->assertIsArray($info);
+        $this->assertInstanceof(NDArray::class,$info['validActions']);
+        $this->assertEquals(NDArray::bool,$info['validActions']->dtype());
+        $this->assertEquals([false,  true,  true, false],$info['validActions']->toArray());
 
         // step
         $action = $la->array(Maze::RIGHT,dtype:NDArray::int32);
         $res = $env->step($action);
         $this->assertIsArray($res);
-        $this->assertCount(4,$res);
-        [$obs,$reward,$done,$info] = $res;
+        $this->assertCount(5,$res);
+        [$obs,$reward,$done,$trunc,$info] = $res;
         $this->assertInstanceof(NDArray::class,$obs);
         $this->assertEquals(NDArray::int32,$obs->dtype());
         $this->assertEquals(1,$la->scalar($obs));
         $this->assertIsFloat($reward);
         $this->assertEquals(-1.0,$reward);
         $this->assertIsBool($done);
+        $this->assertIsBool($trunc);
+        $this->assertEquals([false,  true,  true,  true],$info['validActions']->toArray());
 
         // seed
         $this->assertEquals([12345],$env->seed(12345));

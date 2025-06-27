@@ -4,8 +4,9 @@ namespace Rindow\RL\Gym\Core\Spaces;
 use InvalidArgumentException;
 use RuntimeException;
 use Interop\Polite\Math\Matrix\NDArray;
+use Interop\Polite\AI\RL\Spaces\Box as BoxInterface;
 
-class Box extends AbstractSpace
+class Box extends AbstractSpace implements BoxInterface
 {
     protected NDArray $low;
     protected NDArray $high;

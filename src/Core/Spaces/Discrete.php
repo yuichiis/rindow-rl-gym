@@ -4,13 +4,18 @@ namespace Rindow\RL\Gym\Core\Spaces;
 use InvalidArgumentException;
 use RuntimeException;
 use Interop\Polite\Math\Matrix\NDArray;
+use Interop\Polite\AI\RL\Spaces\Discrete as DiscreteInterface;
 
-class Discrete extends AbstractSpace
+class Discrete extends AbstractSpace implements DiscreteInterface
 {
     protected int $n;
     public function __construct(object $la, int $n, ?int $seed=null)
     {
-        parent::__construct($la,seed:$seed);
+        parent::__construct($la,
+            shape:[],
+            dtype:NDArray::int32,
+            seed:$seed
+        );
         $this->n = $n;
     }
 

@@ -6,8 +6,8 @@ use RuntimeException;
 use InvalidArgumentException;
 use Throwable;
 use Interop\Polite\AI\RL\Environment;
+use Interop\Polite\AI\RL\Spaces\Space;
 use Interop\Polite\Math\Matrix\NDArray;
-use Rindow\RL\Gym\Core\Spaces\Space;
 
 abstract class AbstractEnv implements Environment
 {
@@ -16,7 +16,7 @@ abstract class AbstractEnv implements Environment
      * @return array{NDArray, float, bool, array<string,mixed>}
      */
     abstract protected function doStep(NDArray $action) : array;
-    abstract protected function doReset() : NDArray;
+    abstract protected function doReset() : array;
 
     protected ?Space $actionSpace = null;
     protected ?Space $observationSpace = null;
@@ -63,7 +63,7 @@ abstract class AbstractEnv implements Environment
     }
 
     /**
-     * {NDArray $observation, float $reward, bool $done, array<string,mixed> $info}
+     * {NDArray $observation, float $reward, bool $done, bool $truncated, array<string,mixed> $info}
      * @return array{NDArray, float, bool, array<string,mixed>}
      */
     public function step(mixed $action) : array
@@ -74,14 +74,16 @@ abstract class AbstractEnv implements Environment
         }
         $this->checkActionSpace($action);
         $results = $this->doStep($action);
-        [$observation,$reward,$done,$info] = $results;
-        if(!$this->checkObsSpace($observation)) {
-            $done = true;
+        [$observation,$reward,$done,$truncated,$info] = $results;
+        if(!($done || $truncated)) {
+            if(!$this->checkObsSpace($observation)) {
+                $truncated = true;
+            }
+            if(!$this->checkEpisodeSteps()) {
+                $truncated = true;
+            }
         }
-        if(!$this->checkEpisodeSteps()) {
-            $done = true;
-        }
-        return [$observation,$reward,$done,$info];
+        return [$observation,$reward,$done,$truncated,$info];
     }
 
     protected function setActionSpace(Space $space) : void
@@ -150,7 +152,7 @@ abstract class AbstractEnv implements Environment
     /**
     * return NDArray $observation
     **/
-    public function reset() : mixed
+    public function reset() : array
     {
         $this->elapsedSteps = 0;
         return $this->doReset();
