@@ -56,7 +56,7 @@ class PendulumTest extends TestCase
         $this->assertInstanceof(Box::class,$actionSpace);
         $actionShape = $actionSpace->shape();
         $actionDtype = $actionSpace->dtype();
-        $this->assertEquals([],$actionShape);
+        $this->assertEquals([1],$actionShape);
         $this->assertEquals(NDArray::float32,$actionDtype);
         $this->assertEquals($actionShape,$actionSpace->high()->shape());
         $this->assertEquals($actionDtype,$actionSpace->high()->dtype());
@@ -69,7 +69,7 @@ class PendulumTest extends TestCase
         $this->assertEquals($obsShape,$obs->shape());
 
         // step
-        $action = $la->array(0.0);
+        $action = $la->array([0.0]);
         $res = $env->step($action);
         $this->assertIsArray($res);
         $this->assertCount(5,$res);
@@ -98,7 +98,7 @@ class PendulumTest extends TestCase
         $env->reset();
         $env->render();
         for($i=0;$i<10;$i++) {
-            $action = $la->array(0.1);
+            $action = $la->array([0.1]);
             [$obs,$reward,$done,$trunc,$info] = $env->step($action);
             $env->render();
             if($done) {

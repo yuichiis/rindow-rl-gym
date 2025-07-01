@@ -60,7 +60,7 @@ class PendulumEnv extends AbstractEnv
         $this->g = $g;
 
         $this->setActionSpace(new Box($la,
-            -$this->max_torque, $this->max_torque, shape:[], dtype:NDArray::float32
+            -$this->max_torque, $this->max_torque, shape:[1], dtype:NDArray::float32
         ));
         $high = $la->array([1.0, 1.0, $this->max_speed], dtype:NDArray::float32);
         $low = $la->scal(-1,$la->copy($high));
@@ -71,7 +71,8 @@ class PendulumEnv extends AbstractEnv
 
     public function doStep(NDArray $action) : array
     {
-        $u = $this->la->scalar($action);
+        $la = $this->la; 
+        $u = $la->scalar($la->squeeze($action));
         [$th, $thdot] = $this->state;  # th := theta
 
         $g = $this->g;
