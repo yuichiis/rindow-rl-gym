@@ -169,13 +169,12 @@ abstract class AbstractEnv implements Environment
     /**
     * return mixed $depends on vender
     */
-    public function show(?bool $loop=null,?int $delay=null) : mixed
+    public function show(?string $path=null,?bool $loop=null,?int $delay=null) : mixed
     {
         if($this->viewer===null) {
             throw new LogicException('Viewer is not ready');
         }
-        $this->viewer->show($loop, $delay);
-        return null;
+        return $this->viewer->show(path:$path, loop:$loop, delay:$delay);
     }
 
     /**

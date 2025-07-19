@@ -639,15 +639,20 @@ class GDGL implements GL
         return $img;
     }
 
-    public function show(?bool $loop=null, ?int $delay=null) : void
+    public function show(?string $path=null,?bool $loop=null, ?int $delay=null) : mixed
     {
         if(count($this->outputFiles)==0) {
             throw new LogicException('Image not found');
         } elseif(count($this->outputFiles)==1) {
             $filename = array_shift($this->outputFiles);
             $this->outputFiles = [];
-            $this->executeGifViewer($filename);
-            return;
+            if($path) {
+                rename($filename,$path);
+                $filename = $path;
+            } else {
+                $this->executeGifViewer($filename);
+            }
+            return $filename;
         }
         if($loop===null) {
             $loop=true;
@@ -655,7 +660,11 @@ class GDGL implements GL
         if($delay===null) {
             $delay=5;
         }
-        $filename = $this->outputFile();
+        if($path) {
+            $filename = $path;
+        } else {
+            $filename = $this->outputFile();
+        }
         if(!($stream=fopen($filename,'wb'))) {
             throw new RuntimeException('animation file open error:'.$filename);
         };
@@ -672,7 +681,10 @@ class GDGL implements GL
             @unlink($fname);
         }
         $this->outputFiles = [];
-        $this->executeGifViewer($filename);
+        if($path===null) {
+            $this->executeGifViewer($filename);
+        }
+        return $filename;
     }
 
     protected function executeGifViewer(string $filename) : void
@@ -708,7 +720,6 @@ class GDGL implements GL
 
     protected function outputFile() : string
     {
-        $imagedir = sys_get_temp_dir().'/rindow/rlgym';
         $this->makeDirectory();
         $filename = tempnam($this->imagesDir,'plo');
         rename($filename, $filename.'.gif');

@@ -708,7 +708,7 @@ class GDGLTest extends TestCase
             $gl->glPopMatrix();
             $gl->output();
         }
-        $gl->show(true,100);
+        $gl->show(loop:true,delay:100);
         $this->assertTrue(true);
     }
 
