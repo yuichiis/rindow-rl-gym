@@ -3,7 +3,6 @@ namespace Rindow\RL\Gym\ClassicControl\Maze;
 
 use Rindow\RL\Gym\Core\AbstractEnv;
 use Rindow\RL\Gym\Core\Spaces\Discrete;
-use Rindow\RL\Gym\Core\Spaces\Box;
 use Rindow\RL\Gym\ClassicControl\Rendering\RenderFactory;
 use Rindow\RL\Gym\ClassicControl\Rendering\Transform;
 use Rindow\RL\Gym\ClassicControl\Rendering\Geom;
@@ -75,20 +74,8 @@ class Maze extends AbstractEnv
         $this->numActions = $actions;
         $this->reset();
         $this->setActionSpace(new Discrete($la,$actions));
-        $this->setObservationSpace(new Box($la,
-            low:$la->array([0,0],dtype:NDArray::int32),
-            high:$la->array([$height-1,$width-1],dtype:NDArray::int32),
-        ));
+        $this->setObservationSpace(new Discrete($la,$states));
         $this->setThrowObservationSpaceError(true);
-    }
-
-    protected function getLocation(int $observation) : NDArray
-    {
-        $la = $this->la;
-        $y = intdiv($observation,$this->width);
-        $x = $observation % $this->width;
-        $location = $la->array([$y,$x],dtype:NDArray::int32);
-        return $location;
     }
 
     protected function doStep(NDArray $action) : array
@@ -117,10 +104,10 @@ class Maze extends AbstractEnv
         $this->observation = $observation;
         $done = ($this->exit==$observation);
         $reward = -1.0;
+        $observation = $la->array($observation,dtype:NDArray::int32);
         $truncated = false;
         $valid_actions = $this->policy[$this->observation];
-        $location = $this->getLocation($this->observation);
-        return [$location,$reward,$done,$truncated,['validActions'=>$valid_actions]];
+        return [$observation,$reward,$done,$truncated,['validActions'=>$valid_actions]];
     }
 
     protected function nextStep(int $position, int $action) : int
@@ -147,8 +134,7 @@ class Maze extends AbstractEnv
         $this->observation = 0;
         $observation = $this->la->array($this->observation,dtype:NDArray::int32);
         $valid_actions = $this->policy[$this->observation];
-        $location = $this->getLocation($this->observation);
-        return [$location,['validActions'=>$valid_actions]];
+        return [$observation,['validActions'=>$valid_actions]];
     }
 
     public function render(?string $mode=null) : mixed

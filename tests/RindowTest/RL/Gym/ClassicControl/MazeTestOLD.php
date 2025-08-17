@@ -67,15 +67,13 @@ class MazeTest extends TestCase
 
         // observationSpace
         $obsSpace = $env->observationSpace();
-        $this->assertInstanceof(Box::class,$obsSpace);
+        $this->assertInstanceof(Discrete::class,$obsSpace);
         $obsShape = $obsSpace->shape();
         $obsDtype = $obsSpace->dtype();
-        $this->assertEquals([2],$obsShape);
+        $this->assertEquals([],$obsShape);
         $this->assertEquals(NDArray::int32,$obsDtype);
-        //$this->assertIsInt($obsSpace->n());
-        //$this->assertEquals(9,$obsSpace->n());
-        $this->assertEquals([0,0],$obsSpace->low()->toArray());
-        $this->assertEquals([$height-1,$width-1],$obsSpace->high()->toArray());
+        $this->assertIsInt($obsSpace->n());
+        $this->assertEquals(9,$obsSpace->n());
 
         // actionSpace
         $actionSpace = $env->actionSpace();
@@ -92,7 +90,7 @@ class MazeTest extends TestCase
         [$obs,$info] = $env->reset();
         $this->assertInstanceof(NDArray::class,$obs);
         $this->assertEquals(NDArray::int32,$obs->dtype());
-        $this->assertEquals([0,0],$obs->toArray());
+        $this->assertEquals(0,$la->scalar($obs));
         $this->assertIsArray($info);
         $this->assertInstanceof(NDArray::class,$info['validActions']);
         $this->assertEquals(NDArray::bool,$info['validActions']->dtype());
@@ -106,7 +104,7 @@ class MazeTest extends TestCase
         [$obs,$reward,$done,$trunc,$info] = $res;
         $this->assertInstanceof(NDArray::class,$obs);
         $this->assertEquals(NDArray::int32,$obs->dtype());
-        $this->assertEquals([0,1],$obs->toArray());
+        $this->assertEquals(1,$la->scalar($obs));
         $this->assertIsFloat($reward);
         $this->assertEquals(-1.0,$reward);
         $this->assertIsBool($done);

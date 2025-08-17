@@ -94,6 +94,17 @@ class Box extends AbstractSpace implements BoxInterface
             $shape = implode(',',$this->shape());
             throw new InvalidArgumentException("shape of $type must be ($shape). ($xshape) given.");
         }
+        if($la->isFloat($x)) {
+            return $this->doContainsFloat($x,throw:$throw,type:$type);
+        } else {
+            $result = $this->doContainsInt($x,throw:$throw,type:$type);
+            return $result;
+        }
+    }
+
+    protected function doContainsFloat(NDArray $x, ?bool $throw=null, ?string $type=null)
+    {
+        $la = $this->la;
         $error = $la->less($la->copy($x),$this->low);
         if($la->scalar($la->sum($error))) {
             if($throw) {
@@ -123,6 +134,30 @@ class Box extends AbstractSpace implements BoxInterface
                 throw new RuntimeException("The $type($key) is too high.:$value");
             }
             return false;
+        }
+        return true;
+    }
+
+    protected function doContainsInt(NDArray $x, ?bool $throw=null, ?string $type=null)
+    {
+        $lowLimits = $this->low->toArray();
+        $highLimits = $this->high->toArray();
+        $values = $x->toArray();
+        foreach(array_map(null,$values,$lowLimits) as $key => [$value,$low]) {
+            if($value<$low) {
+                if($throw) {
+                    throw new RuntimeException("The $type($key) is too low.:$value");
+                }
+                return false;
+            }
+        }
+        foreach(array_map(null,$values,$highLimits) as $key => [$value,$high]) {
+            if($value>$high) {
+                if($throw) {
+                    throw new RuntimeException("The $type($key) is too high.:$value");
+                }
+                return false;
+            }
         }
         return true;
     }
