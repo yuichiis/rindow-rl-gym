@@ -8,6 +8,7 @@ use Rindow\Math\Matrix\MatrixOperator;
 use Rindow\RL\Gym\ClassicControl\Maze\Maze;
 use Rindow\RL\Gym\Core\Spaces\Box;
 use Rindow\RL\Gym\Core\Spaces\Discrete;
+use Rindow\RL\Gym\Core\Spaces\Dict;
 
 class MazeTest extends TestCase
 {
@@ -67,15 +68,16 @@ class MazeTest extends TestCase
 
         // observationSpace
         $obsSpace = $env->observationSpace();
-        $this->assertInstanceof(Box::class,$obsSpace);
-        $obsShape = $obsSpace->shape();
-        $obsDtype = $obsSpace->dtype();
+        $this->assertInstanceof(Dict::class,$obsSpace);
+        $this->assertInstanceof(Box::class,$obsSpace['location']);
+        $obsShape = $obsSpace['location']->shape();
+        $obsDtype = $obsSpace['location']->dtype();
         $this->assertEquals([2],$obsShape);
         $this->assertEquals(NDArray::int32,$obsDtype);
         //$this->assertIsInt($obsSpace->n());
         //$this->assertEquals(9,$obsSpace->n());
-        $this->assertEquals([0,0],$obsSpace->low()->toArray());
-        $this->assertEquals([$height-1,$width-1],$obsSpace->high()->toArray());
+        $this->assertEquals([0,0],$obsSpace['location']->low()->toArray());
+        $this->assertEquals([$height-1,$width-1],$obsSpace['location']->high()->toArray());
 
         // actionSpace
         $actionSpace = $env->actionSpace();
@@ -90,13 +92,13 @@ class MazeTest extends TestCase
 
         // reset
         [$obs,$info] = $env->reset();
-        $this->assertInstanceof(NDArray::class,$obs);
-        $this->assertEquals(NDArray::int32,$obs->dtype());
-        $this->assertEquals([0,0],$obs->toArray());
-        $this->assertIsArray($info);
-        $this->assertInstanceof(NDArray::class,$info['validActions']);
-        $this->assertEquals(NDArray::bool,$info['validActions']->dtype());
-        $this->assertEquals([false,  true,  true, false],$info['validActions']->toArray());
+        $this->assertIsArray($obs);
+        $this->assertInstanceof(NDArray::class,$obs['location']);
+        $this->assertEquals(NDArray::int32,$obs['location']->dtype());
+        $this->assertEquals([0,0],$obs['location']->toArray());
+        $this->assertInstanceof(NDArray::class,$obs['actionMask']);
+        $this->assertEquals(NDArray::bool,$obs['actionMask']->dtype());
+        $this->assertEquals([false,  true,  true, false],$obs['actionMask']->toArray());
 
         // step
         $action = $la->array(Maze::RIGHT,dtype:NDArray::int32);
@@ -104,14 +106,14 @@ class MazeTest extends TestCase
         $this->assertIsArray($res);
         $this->assertCount(5,$res);
         [$obs,$reward,$done,$trunc,$info] = $res;
-        $this->assertInstanceof(NDArray::class,$obs);
-        $this->assertEquals(NDArray::int32,$obs->dtype());
-        $this->assertEquals([0,1],$obs->toArray());
+        $this->assertInstanceof(NDArray::class,$obs['location']);
+        $this->assertEquals(NDArray::int32,$obs['location']->dtype());
+        $this->assertEquals([0,1],$obs['location']->toArray());
         $this->assertIsFloat($reward);
         $this->assertEquals(-1.0,$reward);
         $this->assertIsBool($done);
         $this->assertIsBool($trunc);
-        $this->assertEquals([false,  true,  true,  true],$info['validActions']->toArray());
+        $this->assertEquals([false,  true,  true,  true],$obs['actionMask']->toArray());
 
         // seed
         $this->assertEquals([12345],$env->seed(12345));

@@ -112,7 +112,7 @@ abstract class AbstractEnv implements Environment
         }
     }
 
-    protected function checkObsSpace(NDArray $observation) : bool
+    protected function checkObsSpace(NDArray|array $observation) : bool
     {
         if($this->observationSpace===null) {
             return true;
@@ -127,7 +127,7 @@ abstract class AbstractEnv implements Environment
         return true;
     }
 
-    protected function checkSpace(Space $space, NDArray $value, string $type) : ?string
+    protected function checkSpace(Space $space, NDArray|array $value, string $type) : ?string
     {
         $la = $this->la;
         try {

@@ -24,16 +24,20 @@ class Discrete extends AbstractSpace implements DiscreteInterface
         return $this->n;
     }
 
-    public function sample() : NDArray
+    public function sample() : NDArray|array
     {
         $la = $this->la;
         $random = $la->array(rand(0,$this->n-1),dtype:NDArray::int32);
         return $random;
     }
 
-    public function contains(NDArray $x, ?bool $throw=null, ?string $type=null) : bool
+    public function contains(NDArray|array $x, ?bool $throw=null, ?string $type=null) : bool
     {
         $la = $this->la;
+        if(!($x instanceof NDArray)) {
+            $valuetype = gettype($x);
+            throw new InvalidArgumentException("type of $type must be NDArray. $valuetype given.");
+        }
         if($type===null) {
             $type = 'value';
         }

@@ -4,6 +4,7 @@ namespace Rindow\RL\Gym\ClassicControl\Maze;
 use Rindow\RL\Gym\Core\AbstractEnv;
 use Rindow\RL\Gym\Core\Spaces\Discrete;
 use Rindow\RL\Gym\Core\Spaces\Box;
+use Rindow\RL\Gym\Core\Spaces\Dict;
 use Rindow\RL\Gym\ClassicControl\Rendering\RenderFactory;
 use Rindow\RL\Gym\ClassicControl\Rendering\Transform;
 use Rindow\RL\Gym\ClassicControl\Rendering\Geom;
@@ -75,10 +76,13 @@ class Maze extends AbstractEnv
         $this->numActions = $actions;
         $this->reset();
         $this->setActionSpace(new Discrete($la,$actions));
-        $this->setObservationSpace(new Box($la,
-            low:$la->array([0,0],dtype:NDArray::int32),
-            high:$la->array([$height-1,$width-1],dtype:NDArray::int32),
-        ));
+        $this->setObservationSpace(new Dict($la,[
+            'location' => new Box($la,
+                low:$la->array([0,0],dtype:NDArray::int32),
+                high:$la->array([$height-1,$width-1],dtype:NDArray::int32),
+            ),
+            'actionMask' => new Box($la,shape:[$actions], dtype:NDArray::bool),
+        ]));
         $this->setThrowObservationSpaceError(true);
     }
 
@@ -120,7 +124,8 @@ class Maze extends AbstractEnv
         $truncated = false;
         $valid_actions = $this->policy[$this->observation];
         $location = $this->getLocation($this->observation);
-        return [$location,$reward,$done,$truncated,['validActions'=>$valid_actions]];
+        $obs = ['location'=>$location, 'actionMask'=>$valid_actions];
+        return [$obs,$reward,$done,$truncated,[]];
     }
 
     protected function nextStep(int $position, int $action) : int
@@ -148,7 +153,8 @@ class Maze extends AbstractEnv
         $observation = $this->la->array($this->observation,dtype:NDArray::int32);
         $valid_actions = $this->policy[$this->observation];
         $location = $this->getLocation($this->observation);
-        return [$location,['validActions'=>$valid_actions]];
+        $obs = ['location'=>$location, 'actionMask'=>$valid_actions];
+        return [$obs,[]];
     }
 
     public function render(?string $mode=null) : mixed

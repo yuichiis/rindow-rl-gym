@@ -16,14 +16,27 @@ class Box extends AbstractSpace implements BoxInterface
      */
     public function __construct(
         object $la, 
-        NDArray|float|int $low,
-        NDArray|float|int $high,
+        NDArray|float|int|null $low=null,
+        NDArray|float|int|null $high=null,
         ?array $shape=null,
         ?int $dtype=null,
         ?int $seed=null
         )
     {
-        if(is_scalar($low)&&is_scalar($high)) {
+        if($low===null||$high===null) {
+            if($dtype!==NDArray::bool) {
+                throw new InvalidArgumentException("Low and high cannot be omitted except for bool.");
+            }
+            if($low!==null||$high!==null) {
+                throw new InvalidArgumentException("For bool, low and high cannot be specified.");
+            }
+            $shape ??= [];
+            $low ??= $la->fill(false,$la->alloc($shape,dtype:$dtype));
+            $high ??= $la->fill(true,$la->alloc($shape,dtype:$dtype));
+            if($low->shape()!=$high->shape()||$low->dtype()!=$high->dtype()) {
+                throw new InvalidArgumentException('Unmatch shape or dtype of min and max');
+            }
+        } elseif(is_scalar($low)&&is_scalar($high)) {
             $dtype ??= NDArray::float32;
             $shape ??= [];
             $low = $la->fill($low,$la->alloc($shape,dtype:$dtype));
@@ -58,7 +71,7 @@ class Box extends AbstractSpace implements BoxInterface
         return $this->low;
     }
 
-    public function sample() : NDArray
+    public function sample() : NDArray|array
     {
         $la = $this->la;
         $low = $this->low;
@@ -78,9 +91,13 @@ class Box extends AbstractSpace implements BoxInterface
         return $value;
     }
 
-    public function contains(NDArray $x, ?bool $throw=null, ?string $type=null) : bool
+    public function contains(NDArray|array $x, ?bool $throw=null, ?string $type=null) : bool
     {
         $la = $this->la;
+        if(!($x instanceof NDArray)) {
+            $valuetype = gettype($x);
+            throw new InvalidArgumentException("type of $type must be NDArray. $valuetype given.");
+        }
         if($type===null) {
             $type = 'value';
         }
@@ -94,11 +111,12 @@ class Box extends AbstractSpace implements BoxInterface
             $shape = implode(',',$this->shape());
             throw new InvalidArgumentException("shape of $type must be ($shape). ($xshape) given.");
         }
-        if($la->isFloat($x)) {
+        if($x->dtype()===NDArray::bool) {
+            return true;
+        } elseif($la->isFloat($x)) {
             return $this->doContainsFloat($x,throw:$throw,type:$type);
         } else {
-            $result = $this->doContainsInt($x,throw:$throw,type:$type);
-            return $result;
+            return $this->doContainsInt($x,throw:$throw,type:$type);
         }
     }
 
