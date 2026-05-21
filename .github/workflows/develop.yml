@@ -112,10 +112,10 @@ jobs:
       - name: Download Requirements (Linux)
         if: ${{ startsWith(matrix.os, 'ubuntu-') }}
         run: |
-          wget https://github.com/interop-phpobjects/polite-math/archive/refs/heads/master.zip
+          wget https://github.com/${{ env.owner }}/polite-math/archive/refs/heads/main.zip
           unzip master.zip
           rm master.zip
-          wget https://github.com/interop-phpobjects/polite-ai/archive/refs/heads/main.zip
+          wget https://github.com/${{ env.owner }}/polite-ai/archive/refs/heads/main.zip
           unzip main.zip
           rm main.zip
           wget https://github.com/${{ env.owner }}/rindow-math-matrix/archive/refs/heads/${{ env.workspace }}.zip
@@ -135,10 +135,10 @@ jobs:
         if: ${{ startsWith(matrix.os, 'macos-') }}
         run: |
           wget 
-          curl https://github.com/interop-phpobjects/polite-math/archive/refs/heads/master.zip -O -L
+          curl https://github.com/${{ env.owner }}/polite-math/archive/refs/heads/main.zip -O -L
           unzip master.zip
           rm master.zip
-          curl https://github.com/interop-phpobjects/polite-ai/archive/refs/heads/main.zip -O -L
+          curl https://github.com/${{ env.owner }}/polite-ai/archive/refs/heads/main.zip -O -L
           unzip main.zip
           rm main.zip
           curl https://github.com/${{ env.owner }}/rindow-math-matrix/archive/refs/heads/${{ env.workspace }}.zip -O -L
@@ -151,9 +151,9 @@ jobs:
       - name: Download Requirements (Windows)
         if: ${{ startsWith(matrix.os, 'windows-') }}
         run: |
-          Invoke-WebRequest -Uri https://github.com/interop-phpobjects/polite-math/archive/refs/heads/master.zip -OutFile ${{ env.workspace }}1.zip
+          Invoke-WebRequest -Uri https://github.com/${{ env.owner }}/polite-math/archive/refs/heads/master.zip -OutFile ${{ env.workspace }}1.zip
           Expand-Archive -Path master.zip -DestinationPath ${{ env.workspace }}
-          Invoke-WebRequest -Uri https://github.com/interop-phpobjects/polite-ai/archive/refs/heads/main.zip -OutFile ${{ env.workspace }}2.zip
+          Invoke-WebRequest -Uri https://github.com/${{ env.owner }}/polite-ai/archive/refs/heads/main.zip -OutFile ${{ env.workspace }}2.zip
           Expand-Archive -Path main.zip -DestinationPath ${{ env.workspace }}
           Invoke-WebRequest -Uri https://github.com/${{ env.owner }}/rindow-math-matrix/archive/refs/heads/${{ env.workspace }}.zip  -OutFile ${{ env.workspace }}3.zip
           Expand-Archive -Path ${{ env.workspace }}3.zip -DestinationPath ${{ env.workspace }}
