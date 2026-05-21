@@ -113,8 +113,8 @@ jobs:
         if: ${{ startsWith(matrix.os, 'ubuntu-') }}
         run: |
           wget https://github.com/${{ env.owner }}/polite-math/archive/refs/heads/main.zip
-          unzip master.zip
-          rm master.zip
+          unzip main.zip
+          rm main.zip
           wget https://github.com/${{ env.owner }}/polite-ai/archive/refs/heads/main.zip
           unzip main.zip
           rm main.zip
@@ -136,8 +136,8 @@ jobs:
         run: |
           wget 
           curl https://github.com/${{ env.owner }}/polite-math/archive/refs/heads/main.zip -O -L
-          unzip master.zip
-          rm master.zip
+          unzip main.zip
+          rm main.zip
           curl https://github.com/${{ env.owner }}/polite-ai/archive/refs/heads/main.zip -O -L
           unzip main.zip
           rm main.zip
@@ -151,10 +151,10 @@ jobs:
       - name: Download Requirements (Windows)
         if: ${{ startsWith(matrix.os, 'windows-') }}
         run: |
-          Invoke-WebRequest -Uri https://github.com/${{ env.owner }}/polite-math/archive/refs/heads/master.zip -OutFile ${{ env.workspace }}1.zip
-          Expand-Archive -Path master.zip -DestinationPath ${{ env.workspace }}
+          Invoke-WebRequest -Uri https://github.com/${{ env.owner }}/polite-math/archive/refs/heads/main.zip -OutFile ${{ env.workspace }}1.zip
+          Expand-Archive -Path ${{ env.workspace }}1.zip -DestinationPath ${{ env.workspace }}
           Invoke-WebRequest -Uri https://github.com/${{ env.owner }}/polite-ai/archive/refs/heads/main.zip -OutFile ${{ env.workspace }}2.zip
-          Expand-Archive -Path main.zip -DestinationPath ${{ env.workspace }}
+          Expand-Archive -Path ${{ env.workspace }}2.zip -DestinationPath ${{ env.workspace }}
           Invoke-WebRequest -Uri https://github.com/${{ env.owner }}/rindow-math-matrix/archive/refs/heads/${{ env.workspace }}.zip  -OutFile ${{ env.workspace }}3.zip
           Expand-Archive -Path ${{ env.workspace }}3.zip -DestinationPath ${{ env.workspace }}
           Invoke-WebRequest -Uri https://github.com/${{ env.owner }}/rindow-math-plot/archive/refs/heads/${{ env.workspace }}.zip  -OutFile ${{ env.workspace }}4.zip
