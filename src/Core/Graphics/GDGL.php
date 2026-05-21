@@ -519,7 +519,8 @@ class GDGL implements GL
         // rotate original image
         $backcolor = imagecolorallocatealpha($img,0,0,0,127);
         $img = imagerotate($expandedImg,$rotdeg,$backcolor);
-        imagedestroy($expandedImg);
+        // deprecated since 8.5
+        // imagedestroy($expandedImg);
         unset($expandedImg);
         imagealphablending($img,false);
 
@@ -542,7 +543,8 @@ class GDGL implements GL
                 $imgsx,$imgsy
             );
         }
-        imagedestroy($img);
+        // deprecated since 8.5
+        // imagedestroy($img);
     }
 
     public function get_display(mixed $display) : mixed
@@ -705,7 +707,8 @@ class GDGL implements GL
 
     public function close() : void
     {
-        imagedestroy($this->gd);
+        // deprecated since 8.5
+        // imagedestroy($this->gd);
     }
 
     public function currentMatrix() : NDArray
