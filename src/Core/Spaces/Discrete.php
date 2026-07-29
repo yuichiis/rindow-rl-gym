@@ -26,7 +26,7 @@ class Discrete extends AbstractSpace implements DiscreteInterface
     public function sample() : NDArray|array
     {
         $la = $this->la;
-        $random = $la->array($this->rnd->randInt(0,$this->n-1),dtype:NDArray::int32);
+        $random = $la->array($this->rnd->nextInt(0,$this->n-1),dtype:NDArray::int32);
         return $random;
     }
 
