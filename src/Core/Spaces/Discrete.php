@@ -9,12 +9,11 @@ use Interop\Polite\AI\RL\Spaces\Discrete as DiscreteInterface;
 class Discrete extends AbstractSpace implements DiscreteInterface
 {
     protected int $n;
-    public function __construct(object $la, int $n, ?int $seed=null)
+    public function __construct(object $la, int $n)
     {
         parent::__construct($la,
             shape:[],
-            dtype:NDArray::int32,
-            seed:$seed
+            dtype:NDArray::int32
         );
         $this->n = $n;
     }
@@ -27,7 +26,7 @@ class Discrete extends AbstractSpace implements DiscreteInterface
     public function sample() : NDArray|array
     {
         $la = $this->la;
-        $random = $la->array(rand(0,$this->n-1),dtype:NDArray::int32);
+        $random = $la->array($this->rnd->randInt(0,$this->n-1),dtype:NDArray::int32);
         return $random;
     }
 

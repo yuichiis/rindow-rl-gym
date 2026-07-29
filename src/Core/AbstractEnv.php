@@ -28,10 +28,12 @@ abstract class AbstractEnv implements Environment
     protected ?object $viewer=null;
     /** @var array<string,mixed> $metadata */
     protected array $metadata = [];
+    protected PhpPcg32 $rnd;
 
     public function __construct(object $la)
     {
         $this->la = $la;
+        $this->rnd = new PhpPcg32($this->la->randInt(),$this->la->randInt());
     }
 
     public function maxEpisodeSteps() : int
@@ -152,9 +154,12 @@ abstract class AbstractEnv implements Environment
     /**
     * return NDArray $observation
     **/
-    public function reset() : array
+    public function reset(?int $seed=null) : array
     {
         $this->elapsedSteps = 0;
+        if($seed!==null) {
+            $this->rnd->setSeed($seed);
+        }
         return $this->doReset();
     }
 
@@ -186,18 +191,6 @@ abstract class AbstractEnv implements Environment
             $this->viewer->close();
             $this->viewer = null;
         }
-    }
-
-    /**
-    * @return array<int> $seeds
-    */
-    public function seed(?int $seed=null) : array
-    {
-        if($seed===null) {
-            $seed = random_int(~PHP_INT_MAX,PHP_INT_MAX);
-        }
-        mt_srand($seed);
-        return [$seed];
     }
 
     protected function remainder(float $x, float $y) : float

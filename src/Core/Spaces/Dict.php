@@ -70,7 +70,6 @@ class Dict extends AbstractSpace implements  DictInterface
         parent::__construct($la,
             shape:[],
             dtype:NDArray::bool,
-            seed:null,
         );
 
         foreach($spaces as $key => $space) {

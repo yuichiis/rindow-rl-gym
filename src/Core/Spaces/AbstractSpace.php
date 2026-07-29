@@ -2,6 +2,7 @@
 namespace Rindow\RL\Gym\Core\Spaces;
 
 use Interop\Polite\Math\Matrix\NDArray;
+use Rindow\RL\Gym\Core\PhpPcg32;
 
 abstract class AbstractSpace
 {
@@ -9,6 +10,7 @@ abstract class AbstractSpace
     /** @var array<int> */
     protected array $shape;
     protected int $dtype;
+    protected PhpPcg32 $rnd;
 
     /**
      * @param array<int> $shape
@@ -17,15 +19,12 @@ abstract class AbstractSpace
         object $la,
         array $shape,
         int $dtype,
-        ?int $seed=null
     )
     {
         $this->la = $la;
         $this->shape = $shape;
         $this->dtype = $dtype;
-        if($seed!==null) {
-            srand($seed);
-        }
+        $this->rnd = new PhpPcg32($this->la->randInt(),$this->la->randInt());
     }
 
     /**
@@ -41,4 +40,8 @@ abstract class AbstractSpace
         return $this->dtype;
     }
 
+    public function seed(int $seed) : void
+    {
+        $this->rnd->setSeed($seed);
+    }
 }

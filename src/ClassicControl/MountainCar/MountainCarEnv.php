@@ -100,7 +100,6 @@ class MountainCarEnv extends AbstractEnv
         $this->high = $la->array([$this->max_position, $this->max_speed], dtype:NDArray::float32);
         $this->setActionSpace(new Discrete($la, 3));
         $this->setObservationSpace(new Box($la, $this->low, $this->high, [2], NDArray::float32));
-        $this->seed();
     }
 
     protected function doStep(NDArray $action) : array
@@ -136,7 +135,7 @@ class MountainCarEnv extends AbstractEnv
     protected function doReset() : array
     {
         $la = $this->la;
-        $position = $la->randomUniform([1],$low=-0.6, $high=-0.4);
+        $position = $la->randomUniform([1],low:-0.6, high:-0.4, seed:$this->rnd->nextInt32());
         $this->state = [$position[0], 0];
         return [$la->array($this->state, dtype:NDArray::float32),[]];
     }

@@ -115,8 +115,6 @@ class MazeTest extends TestCase
         $this->assertIsBool($trunc);
         $this->assertEquals([false,  true,  true,  true],$obs['actionMask']->toArray());
 
-        // seed
-        $this->assertEquals([12345],$env->seed(12345));
     }
 
     public function testRender()

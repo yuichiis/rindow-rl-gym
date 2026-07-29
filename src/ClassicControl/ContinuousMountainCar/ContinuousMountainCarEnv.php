@@ -118,7 +118,6 @@ class ContinuousMountainCarEnv extends AbstractEnv
             $this->low_state, $this->high_state, dtype:NDArray::float32
         ));
 
-        $this->seed();
     }
 
     protected function doStep(NDArray $action) : array
@@ -167,8 +166,8 @@ class ContinuousMountainCarEnv extends AbstractEnv
     protected function doReset() : array
     {
         $la = $this->la;
-        $position = $la->randomUniform([1],$low=-0.6, $high=-0.4);
-        $this->state = $la->array([$position[0], 0]);
+        $position = $la->randomUniform([1],low:-0.6, high:-0.4, dtype:NDArray::float32, seed:$this->rnd->nextInt32());
+        $this->state = $la->array([$position[0], 0], dtype:NDArray::float32);
         return [$this->state,[]];
     }
 

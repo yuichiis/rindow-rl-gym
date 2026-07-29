@@ -125,7 +125,6 @@ class CartPoleEnv extends AbstractEnv
         $this->setObservationSpace(new Box($la,$min,$high));
         $this->setActionSpace(new Discrete($la,2));
 
-        $this->seed();
         $this->viewer = null;
         $this->state = null;
 
@@ -205,7 +204,7 @@ class CartPoleEnv extends AbstractEnv
     protected function doReset() : array
     {
         $la = $this->la;
-        $this->state = $la->randomUniform([4],$low=-0.05, $high=0.05);
+        $this->state = $la->randomUniform([4],$low=-0.05, $high=0.05, seed:$this->rnd->nextInt32()); // (shape,low,high)
         $this->steps_beyond_done = null;
         return [$this->state,[]];
     }

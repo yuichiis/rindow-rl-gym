@@ -43,7 +43,7 @@ class Slots extends AbstractEnv
         //    throw new InvalidArgumentException('Invalid action');
         //}
         $threshold = $this->thresholds[$this->la->scalar($action)];
-        if( $threshold > mt_rand()) {
+        if( $threshold > $this->rnd->randInt()) {
             $reward = 1.0;
         } else {
             $reward = 0.0;

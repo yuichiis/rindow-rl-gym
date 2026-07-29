@@ -115,7 +115,6 @@ class AcrobotEnv extends AbstractEnv
         $this->setObservationSpace(new Box($la,$low,$high));
         $this->setActionSpace(new Discrete($la,2));
         $this->state = null;
-        $this->seed();
     }
 
     /**
@@ -124,7 +123,7 @@ class AcrobotEnv extends AbstractEnv
     protected function doReset() : array
     {
         $la = $this->la;
-        $this->state = $la->randomUniform([4],-0.1, 0.1); // (shape,low,high)
+        $this->state = $la->randomUniform([4],-0.1, 0.1,seed:$this->rnd->nextInt32()); // (shape,low,high)
 
         return [$this->get_ob(),[]];
     }
@@ -139,7 +138,8 @@ class AcrobotEnv extends AbstractEnv
         # Add noise to the force action
         if($this->torque_noise_max > 0) {
             $torque += $la->randomUniform([1],
-                -$this->torque_noise_max, $this->torque_noise_max
+                -$this->torque_noise_max, $this->torque_noise_max,
+                seed:$this->rnd->nextInt32(),
             )[0];
         }
         # Now, augment the state with our force action so it can be passed to

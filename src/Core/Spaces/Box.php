@@ -20,7 +20,6 @@ class Box extends AbstractSpace implements BoxInterface
         NDArray|float|int|null $high=null,
         ?array $shape=null,
         ?int $dtype=null,
-        ?int $seed=null
         )
     {
         if($low===null||$high===null) {
@@ -56,7 +55,7 @@ class Box extends AbstractSpace implements BoxInterface
         } else {
             throw new InvalidArgumentException('The specification of min and max is not unified');
         }
-        parent::__construct($la,shape:$shape,dtype:$dtype,seed:$seed);
+        parent::__construct($la,shape:$shape,dtype:$dtype);
         $this->low = $low;
         $this->high = $high;
     }
@@ -80,7 +79,8 @@ class Box extends AbstractSpace implements BoxInterface
             $low = $la->astype($low,NDArray::float32);
             $high = $la->astype($high,NDArray::float32);
         }
-        $value = $la->randomUniform($low->shape(),0.0,1.0,NDArray::float32);
+        $value = $la->randomUniform($low->shape(),0.0,1.0,
+            dtype:NDArray::float32,seed:$this->rnd->nextInt32());
         $scale = $la->axpy($low,$la->copy($high),-1);
         $value = $la->multiply($scale,$value);
         $value = $la->axpy($low,$value);

@@ -80,8 +80,6 @@ class ContinuousMountainCarTest extends TestCase
         $this->assertIsBool($done);
         $this->assertIsBool($trunc);
 
-        // seed
-        $this->assertEquals([12345],$env->seed(12345));
     }
 
     public function testRender()

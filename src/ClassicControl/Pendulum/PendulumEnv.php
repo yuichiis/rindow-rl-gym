@@ -66,7 +66,6 @@ class PendulumEnv extends AbstractEnv
         $low = $la->scal(-1,$la->copy($high));
         $this->setObservationSpace(new Box($la, $low, $high));
 
-        $this->seed();
     }
 
     public function doStep(NDArray $action) : array
@@ -102,8 +101,8 @@ class PendulumEnv extends AbstractEnv
     protected function doReset() : array
     {
         $la = $this->la;
-        $theta = $la->randomUniform([],-M_PI,M_PI);
-        $thetadot = $la->randomUniform([],-1,1);
+        $theta = $la->randomUniform([],-M_PI,M_PI, seed:$this->rnd->nextInt32());
+        $thetadot = $la->randomUniform([],-1,1, seed:$this->rnd->nextInt32());
         $this->state = [$la->scalar($theta),$la->scalar($thetadot)];
         $this->last_u = null;
         return [$this->get_obs(),[]];
