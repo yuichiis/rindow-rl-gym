@@ -26,7 +26,7 @@ class Slots extends AbstractEnv
         }
         $this->p = $probabilities;
         foreach ($probabilities as $p) {
-            $this->thresholds[] = (int)floor($p * getrandmax());
+            $this->thresholds[] = (int)floor($p * 0x7FFFFFFF);
         }
         $this->setObservationSpace(new Discrete($la,1));
         $this->setActionSpace(new Discrete($la,count($this->thresholds)));
@@ -43,7 +43,7 @@ class Slots extends AbstractEnv
         //    throw new InvalidArgumentException('Invalid action');
         //}
         $threshold = $this->thresholds[$this->la->scalar($action)];
-        if( $threshold > $this->rnd->randInt()) {
+        if( $threshold > $this->rnd->nextInt(0,0x7FFFFFFF) ) {
             $reward = 1.0;
         } else {
             $reward = 0.0;
