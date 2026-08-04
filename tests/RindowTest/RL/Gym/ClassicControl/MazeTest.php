@@ -139,4 +139,19 @@ class MazeTest extends TestCase
         $env->show(delay:100);
         $this->assertTrue(true);
     }
+
+    public function testAutogenerate()
+    {
+        $mo = $this->newMatrixOperator();
+        $la = $this->newLa($mo);
+        $la->setSeed(1234);
+ 
+        [$width,$height,$exit] = [8,8,63];
+
+        $env = new Maze($la,width:$width,height:$height,exit:$exit,metadata:$this->getMetadata());
+        $env->reset();
+        $env->render();
+        $env->show();
+        $this->assertTrue(true);
+    }
 }

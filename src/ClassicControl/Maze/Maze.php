@@ -41,8 +41,8 @@ class Maze extends AbstractEnv
      * @param array<string,mixed> $metadata
      */
     public function __construct(
-        object $la,NDArray $policy,
-        int $width,int $height,int $exit,
+        object $la,?NDArray $policy=null,
+        int $width=0,int $height=0,int $exit=-1,
         ?int $throwInvalidAction=null,?int $maxEpisodeSteps=null,
         ?array $metadata=null, ?object $renderer=null)
     {
@@ -54,6 +54,16 @@ class Maze extends AbstractEnv
             $renderer = new RenderFactory($la,'gd',$this->metadata);
         }
         $this->renderingFactory = $renderer;
+        if($width<=0 || $height<=0) {
+            throw new InvalidArgumentException('width and height must be greater than zero');
+        }
+        $numStates = $width*$height;
+        if($exit<0 || $exit>=$numStates) {
+            throw new InvalidArgumentException('exit must be within the maze');
+        }
+        if($policy===null) {
+            $policy = $this->generatePolicy($width,$height);
+        }
         if($policy->ndim()!=2) {
             throw new InvalidArgumentException('policy must be 2D NDArray');
         }
@@ -72,6 +82,12 @@ class Maze extends AbstractEnv
             $this->maxEpisodeSteps = $maxEpisodeSteps;
         }
         [$states,$actions] = $policy->shape();
+        if($states!==$numStates) {
+            throw new InvalidArgumentException('policy states must match width * height');
+        }
+        if($actions!==4) {
+            throw new InvalidArgumentException('policy must have four actions per state');
+        }
         $this->numStates = $states;
         $this->numActions = $actions;
         $this->reset();
@@ -84,6 +100,63 @@ class Maze extends AbstractEnv
             'actionMask' => new Box($la,shape:[$actions], dtype:NDArray::bool),
         ]));
         $this->setThrowObservationSpaceError(true);
+    }
+
+    /**
+     * Return a copy of the action rules representing the maze.
+     */
+    public function mazeRules() : NDArray
+    {
+        return $this->la->copy($this->policy);
+    }
+
+    /**
+     * Generate a perfect maze represented by the available actions of each cell.
+     */
+    protected function generatePolicy(int $width, int $height) : NDArray
+    {
+        $numStates = $width*$height;
+        $rules = array_fill(0,$numStates,array_fill(0,4,false));
+        $visited = array_fill(0,$numStates,false);
+        $visited[0] = true;
+        $stack = [0];
+        $opposite = [
+            self::UP => self::DOWN,
+            self::DOWN => self::UP,
+            self::RIGHT => self::LEFT,
+            self::LEFT => self::RIGHT,
+        ];
+
+        while($stack) {
+            $position = $stack[count($stack)-1];
+            $x = $position % $width;
+            $y = intdiv($position,$width);
+            $neighbors = [];
+            if($y>0 && !$visited[$position-$width]) {
+                $neighbors[] = [self::UP,$position-$width];
+            }
+            if($y<$height-1 && !$visited[$position+$width]) {
+                $neighbors[] = [self::DOWN,$position+$width];
+            }
+            if($x<$width-1 && !$visited[$position+1]) {
+                $neighbors[] = [self::RIGHT,$position+1];
+            }
+            if($x>0 && !$visited[$position-1]) {
+                $neighbors[] = [self::LEFT,$position-1];
+            }
+            if(!$neighbors) {
+                array_pop($stack);
+                continue;
+            }
+
+            [$action,$next] = $neighbors[$this->rnd->nextInt(0,count($neighbors)-1)];
+            $rules[$position][$action] = true;
+            $rules[$next][$opposite[$action]] = true;
+            $visited[$next] = true;
+            $stack[] = $next;
+        }
+
+        return $this->la->array($rules,dtype:NDArray::bool);
     }
 
     protected function getLocation(int $observation) : NDArray
