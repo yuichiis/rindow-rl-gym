@@ -9,8 +9,8 @@ jobs:
   tests:
     runs-on: ${{ matrix.os }}
     env:
-        matlib: 1.1.0
-        testlib: 0.0.23
+        matlib: 1.1.1
+        testlib: 0.0.24
         matlibrepo: ${{ github.repository_owner }}/rindow-matlib
         workspace: workspace
         owner: ${{ github.repository_owner }}
@@ -60,7 +60,7 @@ jobs:
           php-version: ${{ matrix.php }}
           # PHP Extras
           coverage: none
-          tools: composer, phpstan
+          tools: composer, phpstan:2.1.x
           ini-values: "memory_limit=512M"
           extensions: gd, mbstring, ${{ matrix.ffi }}
         env:
@@ -103,7 +103,8 @@ jobs:
         if: ${{ !startsWith(matrix.os, 'windows-') }}
         run: |
           mv composer.json composer.json.backup
-          composer require --dev phpunit/phpunit=^${{ matrix.phpunit }}
+          composer require --dev "phpunit/phpunit=${{ matrix.phpunit }}.*"
+          cp composer.json.backup composer.json
 
       - name: Download Requirements (Linux)
         if: ${{ startsWith(matrix.os, 'ubuntu-') }}

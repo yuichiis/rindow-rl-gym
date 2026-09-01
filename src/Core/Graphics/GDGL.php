@@ -118,7 +118,7 @@ class GDGL implements GL
     }
 
     /**
-     * @param array<float> $point
+     * @param array<float|int> $point
      */
     protected function realCoordinate(array $point, ?bool $realMode=null) : NDArray
     {

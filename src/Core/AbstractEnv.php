@@ -12,10 +12,15 @@ use Interop\Polite\Math\Matrix\NDArray;
 abstract class AbstractEnv implements Environment
 {
     /**
-     * {NDArray $observation, float $reward, bool $done, array<string,mixed> $info}
-     * @return array{NDArray, float, bool, array<string,mixed>}
+     * {NDArray $observation, float $reward, bool $done, bool $truncated, array<string,mixed> $info}
+     * @return array{NDArray|array<string,mixed>, float, bool, bool, array<string,mixed>}
      */
     abstract protected function doStep(NDArray $action) : array;
+
+    /**
+     * {NDArray $observation, array<string,mixed> $info}
+     * @return array{NDArray|array<string,mixed>, array<string,mixed>}
+     */
     abstract protected function doReset() : array;
 
     protected ?Space $actionSpace = null;
@@ -66,7 +71,7 @@ abstract class AbstractEnv implements Environment
 
     /**
      * {NDArray $observation, float $reward, bool $done, bool $truncated, array<string,mixed> $info}
-     * @return array{NDArray, float, bool, array<string,mixed>}
+     * @return array{NDArray, float, bool, bool, array<string,mixed>}
      */
     public function step(mixed $action) : array
     {
@@ -114,6 +119,9 @@ abstract class AbstractEnv implements Environment
         }
     }
 
+    /**
+     * @param NDArray|array<string,NDArray> $observation
+     */
     protected function checkObsSpace(NDArray|array $observation) : bool
     {
         if($this->observationSpace===null) {
@@ -129,6 +137,9 @@ abstract class AbstractEnv implements Environment
         return true;
     }
 
+    /**
+     * @param NDArray|array<string,NDArray> $value
+     */
     protected function checkSpace(Space $space, NDArray|array $value, string $type) : ?string
     {
         $la = $this->la;

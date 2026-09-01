@@ -48,6 +48,9 @@ use Interop\Polite\AI\RL\Spaces\Dict as DictInterface;
 
 class Dict extends AbstractSpace implements  DictInterface
 {
+    /**
+    * @var array<string,Space>
+    */
     protected array $spaces = [];
 
     /**
@@ -61,6 +64,9 @@ class Dict extends AbstractSpace implements  DictInterface
      *       spaces: A dictionary of spaces. This specifies the structure of the :class:`Dict` space
      *       seed: Optionally, you can use this argument to seed the RNGs of the spaces that make up the :class:`Dict` space.
      *       **spaces_kwargs: If ``spaces`` is ``None``, you need to pass the constituent spaces as keyword arguments, as described above.
+     *
+     * @param object $la
+     * @param array<string,Space> $spaces
      */
     public function __construct(
         object $la,

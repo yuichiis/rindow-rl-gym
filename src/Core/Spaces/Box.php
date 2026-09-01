@@ -30,8 +30,8 @@ class Box extends AbstractSpace implements BoxInterface
                 throw new InvalidArgumentException("For bool, low and high cannot be specified.");
             }
             $shape ??= [];
-            $low ??= $la->fill(false,$la->alloc($shape,dtype:$dtype));
-            $high ??= $la->fill(true,$la->alloc($shape,dtype:$dtype));
+            $low = $la->fill(false,$la->alloc($shape,dtype:$dtype));
+            $high = $la->fill(true,$la->alloc($shape,dtype:$dtype));
             if($low->shape()!=$high->shape()||$low->dtype()!=$high->dtype()) {
                 throw new InvalidArgumentException('Unmatch shape or dtype of min and max');
             }
@@ -120,7 +120,7 @@ class Box extends AbstractSpace implements BoxInterface
         }
     }
 
-    protected function doContainsFloat(NDArray $x, ?bool $throw=null, ?string $type=null)
+    protected function doContainsFloat(NDArray $x, ?bool $throw=null, ?string $type=null) : bool
     {
         $la = $this->la;
         $error = $la->less($la->copy($x),$this->low);
@@ -156,7 +156,7 @@ class Box extends AbstractSpace implements BoxInterface
         return true;
     }
 
-    protected function doContainsInt(NDArray $x, ?bool $throw=null, ?string $type=null)
+    protected function doContainsInt(NDArray $x, ?bool $throw=null, ?string $type=null) : bool
     {
         $lowLimits = $this->low->toArray();
         $highLimits = $this->high->toArray();
