@@ -218,7 +218,7 @@ class Maze extends AbstractEnv
     }
 
     /**
-    * return array{NDArray $observation,array<mixed> $info}
+    * return array{NDArray|array<string,NDArray> $observation,array<mixed> $info}
     **/
     protected function doReset() : array
     {
