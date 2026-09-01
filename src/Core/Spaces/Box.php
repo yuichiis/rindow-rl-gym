@@ -4,8 +4,9 @@ namespace Rindow\RL\Gym\Core\Spaces;
 use InvalidArgumentException;
 use RuntimeException;
 use Interop\Polite\Math\Matrix\NDArray;
+use Interop\Polite\AI\RL\Spaces\Box as BoxInterface;
 
-class Box extends AbstractSpace
+class Box extends AbstractSpace implements BoxInterface
 {
     protected NDArray $low;
     protected NDArray $high;
@@ -15,14 +16,26 @@ class Box extends AbstractSpace
      */
     public function __construct(
         object $la, 
-        NDArray|float|int $low,
-        NDArray|float|int $high,
+        NDArray|float|int|null $low=null,
+        NDArray|float|int|null $high=null,
         ?array $shape=null,
         ?int $dtype=null,
-        ?int $seed=null
         )
     {
-        if(is_scalar($low)&&is_scalar($high)) {
+        if($low===null||$high===null) {
+            if($dtype!==NDArray::bool) {
+                throw new InvalidArgumentException("Low and high cannot be omitted except for bool.");
+            }
+            if($low!==null||$high!==null) {
+                throw new InvalidArgumentException("For bool, low and high cannot be specified.");
+            }
+            $shape ??= [];
+            $low = $la->fill(false,$la->alloc($shape,dtype:$dtype));
+            $high = $la->fill(true,$la->alloc($shape,dtype:$dtype));
+            if($low->shape()!=$high->shape()||$low->dtype()!=$high->dtype()) {
+                throw new InvalidArgumentException('Unmatch shape or dtype of min and max');
+            }
+        } elseif(is_scalar($low)&&is_scalar($high)) {
             $dtype ??= NDArray::float32;
             $shape ??= [];
             $low = $la->fill($low,$la->alloc($shape,dtype:$dtype));
@@ -42,7 +55,7 @@ class Box extends AbstractSpace
         } else {
             throw new InvalidArgumentException('The specification of min and max is not unified');
         }
-        parent::__construct($la,shape:$shape,dtype:$dtype,seed:$seed);
+        parent::__construct($la,shape:$shape,dtype:$dtype);
         $this->low = $low;
         $this->high = $high;
     }
@@ -57,7 +70,7 @@ class Box extends AbstractSpace
         return $this->low;
     }
 
-    public function sample() : NDArray
+    public function sample() : NDArray|array
     {
         $la = $this->la;
         $low = $this->low;
@@ -66,7 +79,8 @@ class Box extends AbstractSpace
             $low = $la->astype($low,NDArray::float32);
             $high = $la->astype($high,NDArray::float32);
         }
-        $value = $la->randomUniform($low->shape(),0.0,1.0,NDArray::float32);
+        $value = $la->randomUniform($low->shape(),0.0,1.0,
+            dtype:NDArray::float32,seed:$this->rnd->nextInt32());
         $scale = $la->axpy($low,$la->copy($high),-1);
         $value = $la->multiply($scale,$value);
         $value = $la->axpy($low,$value);
@@ -77,15 +91,19 @@ class Box extends AbstractSpace
         return $value;
     }
 
-    public function contains(NDArray $x, ?bool $throw=null, ?string $type=null) : bool
+    public function contains(NDArray|array $x, ?bool $throw=null, ?string $type=null) : bool
     {
         $la = $this->la;
+        if(!($x instanceof NDArray)) {
+            $valuetype = gettype($x);
+            throw new InvalidArgumentException("type of $type must be NDArray. $valuetype given.");
+        }
         if($type===null) {
             $type = 'value';
         }
         if($x->dtype()!==$this->dtype()) {
-            $xdtype = $this->dtypeToString($x->dtype());
-            $dtype = $this->dtypeToString($this->dtype());
+            $xdtype = $la->dtypeToString($x->dtype());
+            $dtype = $la->dtypeToString($this->dtype());
             throw new InvalidArgumentException("dtype of $type must be $dtype. $xdtype given.");
         }
         if($x->shape()!=$this->shape()) {
@@ -93,6 +111,18 @@ class Box extends AbstractSpace
             $shape = implode(',',$this->shape());
             throw new InvalidArgumentException("shape of $type must be ($shape). ($xshape) given.");
         }
+        if($x->dtype()===NDArray::bool) {
+            return true;
+        } elseif($la->isFloat($x)) {
+            return $this->doContainsFloat($x,throw:$throw,type:$type);
+        } else {
+            return $this->doContainsInt($x,throw:$throw,type:$type);
+        }
+    }
+
+    protected function doContainsFloat(NDArray $x, ?bool $throw=null, ?string $type=null) : bool
+    {
+        $la = $this->la;
         $error = $la->less($la->copy($x),$this->low);
         if($la->scalar($la->sum($error))) {
             if($throw) {
@@ -122,6 +152,30 @@ class Box extends AbstractSpace
                 throw new RuntimeException("The $type($key) is too high.:$value");
             }
             return false;
+        }
+        return true;
+    }
+
+    protected function doContainsInt(NDArray $x, ?bool $throw=null, ?string $type=null) : bool
+    {
+        $lowLimits = $this->low->toArray();
+        $highLimits = $this->high->toArray();
+        $values = $x->toArray();
+        foreach(array_map(null,$values,$lowLimits) as $key => [$value,$low]) {
+            if($value<$low) {
+                if($throw) {
+                    throw new RuntimeException("The $type($key) is too low.:$value");
+                }
+                return false;
+            }
+        }
+        foreach(array_map(null,$values,$highLimits) as $key => [$value,$high]) {
+            if($value>$high) {
+                if($throw) {
+                    throw new RuntimeException("The $type($key) is too high.:$value");
+                }
+                return false;
+            }
         }
         return true;
     }

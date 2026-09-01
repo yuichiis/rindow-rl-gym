@@ -60,18 +60,18 @@ class PendulumEnv extends AbstractEnv
         $this->g = $g;
 
         $this->setActionSpace(new Box($la,
-            -$this->max_torque, $this->max_torque, shape:[], dtype:NDArray::float32
+            -$this->max_torque, $this->max_torque, shape:[1], dtype:NDArray::float32
         ));
         $high = $la->array([1.0, 1.0, $this->max_speed], dtype:NDArray::float32);
         $low = $la->scal(-1,$la->copy($high));
         $this->setObservationSpace(new Box($la, $low, $high));
 
-        $this->seed();
     }
 
     public function doStep(NDArray $action) : array
     {
-        $u = $this->la->scalar($action);
+        $la = $this->la; 
+        $u = $la->scalar($la->squeeze($action));
         [$th, $thdot] = $this->state;  # th := theta
 
         $g = $this->g;
@@ -88,17 +88,24 @@ class PendulumEnv extends AbstractEnv
         $newth = $th + $newthdot * $dt;
 
         $this->state = [$newth, $newthdot];
-        return [$this->get_obs(), -$costs, false, []];
+        $observation = $this->get_obs();
+        $reward = -$costs;
+        $done = false;
+        $truncated = false;
+        return [$observation, $reward, $done, $truncated, []];
     }
 
-    public function doReset() : NDArray
+    /**
+    * return array{NDArray $observation,array<mixed> $info}
+    **/
+    protected function doReset() : array
     {
         $la = $this->la;
-        $theta = $la->randomUniform([],-M_PI,M_PI);
-        $thetadot = $la->randomUniform([],-1,1);
+        $theta = $la->randomUniform([],-M_PI,M_PI, seed:$this->rnd->nextInt32());
+        $thetadot = $la->randomUniform([],-1,1, seed:$this->rnd->nextInt32());
         $this->state = [$la->scalar($theta),$la->scalar($thetadot)];
         $this->last_u = null;
-        return $this->get_obs();
+        return [$this->get_obs(),[]];
     }
 
     protected function get_obs() : NDArray

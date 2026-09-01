@@ -9,8 +9,8 @@ jobs:
   tests:
     runs-on: ${{ matrix.os }}
     env:
-        matlib: 1.1.0
-        testlib: 0.0.23
+        matlib: 1.1.1
+        testlib: 0.0.24
         matlibrepo: ${{ github.repository_owner }}/rindow-matlib
         workspace: workspace
         owner: ${{ github.repository_owner }}
@@ -20,42 +20,38 @@ jobs:
       matrix:
         #ffi: ['','ffi']
         include:
-          #- name: PHP8.1
-          #  os: ubuntu-latest
+          #- os: ubuntu-latest
           #  arch: 'amd64'
           #  php: '8.1'
           #  phpunit: '10.5'
           #  ffi: 'ffi'
-          #- name: PHP8.3
-          #  os: ubuntu-latest
+          #- os: ubuntu-latest
           #  arch: 'amd64'
-          #  php: '8.3'
+          #  php: '8.4'
           #  phpunit: '11.5'
           #  ffi: 'ffi'
-          - name: PHP8.4
-            os: ubuntu-latest
+          - os: ubuntu-latest
             arch: 'amd64'
-            php: '8.4'
+            php: '8.5'
             phpunit: '11.5'
             ffi: 'ffi'
-          #- name: Windows
-          #  os: windows-latest
+          #- os: windows-latest
           #  arch: 'x64'
-          #  php: '8.4'
+          #  php: '8.5'
           #  phpunit: '11.5'
           #  ffi: 'ffi'
-          #- name: macOS
-          #  os: macos-latest
+          #- os: macos-latest
           #  arch: 'arm64'
-          #  php: '8.4'
+          #  php: '8.5'
           #  phpunit: '11.5'
           #  ffi: 'ffi'
-          #- name: macOS-x86_64
-          #  os: macos-13
+          #- os: macos-13
           #  arch: 'x86_64'
-          #  php: '8.4'
+          #  php: '8.5'
           #  phpunit: '11.5'
           #  ffi: 'ffi'
+
+    name: PHP ${{ matrix.php }} on ${{ matrix.os }}
 
     steps:
       - name: Setup PHP ${{ matrix.php }}
@@ -64,86 +60,102 @@ jobs:
           php-version: ${{ matrix.php }}
           # PHP Extras
           coverage: none
-          tools: composer, phpstan
+          tools: composer, phpstan:2.1.x
           ini-values: "memory_limit=512M"
-          extensions: gd, mbstring
+          extensions: gd, mbstring, ${{ matrix.ffi }}
         env:
           fail-fast: true
 
-      #- name: Install Libs (Linux)
-      #  if: ${{ startsWith(matrix.os, 'ubuntu-') && matrix.ffi == 'ffi' }}
-      #  run: |
-      #    sudo apt install -y libopenblas0 liblapacke
-      #    wget https://github.com/${{ env.matlibrepo }}/releases/download/${{ env.testlib }}/rindow-matlib_${{ env.matlib }}-`lsb_release -sr`_amd64.deb
-      #    sudo apt install -y ./rindow-matlib_${{ env.matlib }}-`lsb_release -sr`_amd64.deb
+      - name: Install Libs (Linux)
+        if: ${{ startsWith(matrix.os, 'ubuntu-') && matrix.ffi == 'ffi' }}
+        run: |
+          sudo apt install -y libopenblas0 liblapacke
+          wget https://github.com/${{ env.matlibrepo }}/releases/download/${{ env.testlib }}/rindow-matlib_${{ env.matlib }}-`lsb_release -sr`_amd64.deb
+          sudo apt install -y ./rindow-matlib_${{ env.matlib }}-`lsb_release -sr`_amd64.deb
 
-      #- name: Install Libs (macOS)
-      #  if: ${{ startsWith(matrix.os, 'macos-') && matrix.ffi == 'ffi' }}
-      #  run: |
-      #    # brew install libomp
-      #    curl https://github.com/${{ env.matlibrepo }}/releases/download/${{ env.testlib }}/rindow-matlib-${{ env.matlib }}-Darwin-${{ matrix.arch }}.tar.gz -O -L
-      #    tar -xzf rindow-matlib-${{ env.matlib }}-Darwin-${{ matrix.arch }}.tar.gz
-      #    sudo cp -r usr/include /usr/local/
-      #    sudo cp -r usr/lib /usr/local/
+      - name: Install Libs (macOS)
+        if: ${{ startsWith(matrix.os, 'macos-') && matrix.ffi == 'ffi' }}
+        run: |
+          # brew install libomp
+          curl https://github.com/${{ env.matlibrepo }}/releases/download/${{ env.testlib }}/rindow-matlib-${{ env.matlib }}-Darwin-${{ matrix.arch }}.tar.gz -O -L
+          tar -xzf rindow-matlib-${{ env.matlib }}-Darwin-${{ matrix.arch }}.tar.gz
+          sudo cp -r usr/include /usr/local/
+          sudo cp -r usr/lib /usr/local/
 
-      #- name: Install Libs (Windows)
-      #  if: ${{ startsWith(matrix.os, 'windows-') && matrix.ffi == 'ffi' }}
-      #  run: |
-      #    Invoke-WebRequest -Uri https://github.com/OpenMathLib/OpenBLAS/releases/download/v0.3.27/OpenBLAS-0.3.27-x64.zip -OutFile openblas.zip
-      #    Expand-Archive -Path openblas.zip
-      #    Invoke-WebRequest -Uri https://github.com/${{ env.matlibrepo }}/releases/download/${{ env.testlib }}/rindow-matlib-${{ env.matlib }}-win64.zip -OutFile matlib.zip
-      #    Expand-Archive -Path matlib.zip
-      #    $currentDir = (Get-Location).Path
-      #    dir $currentDir
-      #    $OpenBLAS_DIR = Join-Path -Path $currentDir -ChildPath 'openblas'
-      #    dir $OpenBLAS_DIR/bin
-      #    $matlibDir = Join-Path -Path $currentDir -ChildPath 'matlib'
-      #    dir $matlibDir/bin
+      - name: Install Libs (Windows)
+        if: ${{ startsWith(matrix.os, 'windows-') && matrix.ffi == 'ffi' }}
+        run: |
+          Invoke-WebRequest -Uri https://github.com/OpenMathLib/OpenBLAS/releases/download/v0.3.27/OpenBLAS-0.3.27-x64.zip -OutFile openblas.zip
+          Expand-Archive -Path openblas.zip
+          Invoke-WebRequest -Uri https://github.com/${{ env.matlibrepo }}/releases/download/${{ env.testlib }}/rindow-matlib-${{ env.matlib }}-win64.zip -OutFile matlib.zip
+          Expand-Archive -Path matlib.zip
+          $currentDir = (Get-Location).Path
+          dir $currentDir
+          $OpenBLAS_DIR = Join-Path -Path $currentDir -ChildPath 'openblas'
+          dir $OpenBLAS_DIR/bin
+          $matlibDir = Join-Path -Path $currentDir -ChildPath 'matlib'
+          dir $matlibDir/bin
 
       - name: Checkout codes
         uses: "actions/checkout@v4"
 
-      #- name: Run Composer Update
-      #  run: |
-      #    composer update
-      #    composer require --dev phpunit/phpunit=^${{ matrix.phpunit }}
+      - name: Install phpunit (${{ matrix.name }})
+        if: ${{ !startsWith(matrix.os, 'windows-') }}
+        run: |
+          mv composer.json composer.json.backup
+          composer require --dev "phpunit/phpunit=${{ matrix.phpunit }}.*"
+          cp composer.json.backup composer.json
 
       - name: Download Requirements (Linux)
         if: ${{ startsWith(matrix.os, 'ubuntu-') }}
         run: |
-          wget https://github.com/interop-phpobjects/polite-math/archive/refs/heads/master.zip
-          unzip master.zip
-          rm master.zip
-          wget https://github.com/interop-phpobjects/polite-ai/archive/refs/heads/main.zip
+          wget https://github.com/${{ env.owner }}/polite-math/archive/refs/heads/main.zip
+          unzip main.zip
+          rm main.zip
+          wget https://github.com/${{ env.owner }}/polite-ai/archive/refs/heads/main.zip
           unzip main.zip
           rm main.zip
           wget https://github.com/${{ env.owner }}/rindow-math-matrix/archive/refs/heads/${{ env.workspace }}.zip
           unzip ${{ env.workspace }}.zip
           rm ${{ env.workspace }}.zip
+          wget https://github.com/${{ env.owner }}/rindow-math-plot/archive/refs/heads/${{ env.workspace }}.zip
+          unzip ${{ env.workspace }}.zip
+          rm ${{ env.workspace }}.zip
+          WORKING_BRANCH=${{ env.workspace }}; export WORKING_BRANCH
+          ADD_PACK=`pwd`; export ADD_PACK
+          echo "WORKING_BRANCH=${WORKING_BRANCH}" > $GITHUB_OUTPUT
+          echo "ADD_PACK=${ADD_PACK}"             >> $GITHUB_OUTPUT
+          echo "Extracted branch: ${WORKING_BRANCH}"
+          echo "Extracted to: ${ADD_PACK}"
 
       - name: Download Requirements (macOS)
         if: ${{ startsWith(matrix.os, 'macos-') }}
         run: |
           wget 
-          curl https://github.com/interop-phpobjects/polite-math/archive/refs/heads/master.zip -O -L
-          unzip master.zip
-          rm master.zip
-          curl https://github.com/interop-phpobjects/polite-ai/archive/refs/heads/main.zip -O -L
+          curl https://github.com/${{ env.owner }}/polite-math/archive/refs/heads/main.zip -O -L
+          unzip main.zip
+          rm main.zip
+          curl https://github.com/${{ env.owner }}/polite-ai/archive/refs/heads/main.zip -O -L
           unzip main.zip
           rm main.zip
           curl https://github.com/${{ env.owner }}/rindow-math-matrix/archive/refs/heads/${{ env.workspace }}.zip -O -L
+          unzip ${{ env.workspace }}.zip
+          rm ${{ env.workspace }}.zip
+          curl https://github.com/${{ env.owner }}/rindow-math-plot/archive/refs/heads/${{ env.workspace }}.zip -O -L
           unzip ${{ env.workspace }}.zip
           rm ${{ env.workspace }}.zip
   
       - name: Download Requirements (Windows)
         if: ${{ startsWith(matrix.os, 'windows-') }}
         run: |
-          Invoke-WebRequest -Uri https://github.com/interop-phpobjects/polite-math/archive/refs/heads/master.zip -OutFile ${{ env.workspace }}1.zip
-          Expand-Archive -Path master.zip -DestinationPath ${{ env.workspace }}
-          Invoke-WebRequest -Uri https://github.com/interop-phpobjects/polite-ai/archive/refs/heads/main.zip -OutFile ${{ env.workspace }}2.zip
-          Expand-Archive -Path main.zip -DestinationPath ${{ env.workspace }}
+          Invoke-WebRequest -Uri https://github.com/${{ env.owner }}/polite-math/archive/refs/heads/main.zip -OutFile ${{ env.workspace }}1.zip
+          Expand-Archive -Path ${{ env.workspace }}1.zip -DestinationPath ${{ env.workspace }}
+          Invoke-WebRequest -Uri https://github.com/${{ env.owner }}/polite-ai/archive/refs/heads/main.zip -OutFile ${{ env.workspace }}2.zip
+          Expand-Archive -Path ${{ env.workspace }}2.zip -DestinationPath ${{ env.workspace }}
           Invoke-WebRequest -Uri https://github.com/${{ env.owner }}/rindow-math-matrix/archive/refs/heads/${{ env.workspace }}.zip  -OutFile ${{ env.workspace }}3.zip
           Expand-Archive -Path ${{ env.workspace }}3.zip -DestinationPath ${{ env.workspace }}
+          Invoke-WebRequest -Uri https://github.com/${{ env.owner }}/rindow-math-plot/archive/refs/heads/${{ env.workspace }}.zip  -OutFile ${{ env.workspace }}4.zip
+          Expand-Archive -Path ${{ env.workspace }}4.zip -DestinationPath ${{ env.workspace }}
 
       - name: Download Add-packs (Linux)
         if: ${{ startsWith(matrix.os, 'ubuntu-') }}
@@ -194,7 +206,7 @@ jobs:
         run: |
           WORKING_BRANCH=${{ env.workspace }}; export WORKING_BRANCH
           ADD_PACK=`pwd`; export ADD_PACK
-          phpstan
+          phpstan analyse tests/Bootstrap.php
 
       - name: PHP Static Analysys (${{ matrix.name }}).
         if: ${{ startsWith(matrix.os, 'windows-') }}
@@ -202,14 +214,16 @@ jobs:
           $currentDir = (Get-Location).Path
           $env:WORKING_BRANCH = "${{ env.workspace }}"
           $env:ADD_PACK = "$currentDir/${{ env.workspace }}"
-          phpstan
+          phpstan analyse tests/Bootstrap.php
 
       - name: PHPUnit Tests (${{ matrix.name }}).
         if: ${{ !startsWith(matrix.os, 'windows-') }}
         run: |
           WORKING_BRANCH=${{ env.workspace }}; export WORKING_BRANCH
           ADD_PACK=`pwd`; export ADD_PACK
-          vendor/bin/phpunit -c tests/checkadvanced.xml
+          vendor/bin/phpunit -c tests
+        env:
+          PLOT_RENDERER_SKIP: true
 
       - name: PHPUnit Tests (Windows)
         if: ${{ startsWith(matrix.os, 'windows-') }}
@@ -225,5 +239,7 @@ jobs:
           dir $matlibDir/bin
           $env:WORKING_BRANCH = "${{ env.workspace }}"
           $env:ADD_PACK = "$currentDir/${{ env.workspace }}"
-          vendor/bin/phpunit -c tests/checkadvanced.xml
+          vendor/bin/phpunit -c tests
+        env:
+          PLOT_RENDERER_SKIP: true
 

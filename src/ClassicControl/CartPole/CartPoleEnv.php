@@ -114,10 +114,10 @@ class CartPoleEnv extends AbstractEnv
         # is still within bounds.
         $high = $la->array(
             [
-                $this->x_threshold * 2,
-                INF,
-                $this->theta_threshold_radians * 2,
-                INF,
+                $this->x_threshold * 2,             // $x
+                INF,                                // $x_dot
+                $this->theta_threshold_radians * 2, // $theta
+                INF,                                // $theta_dot
             ],
             dtype:NDArray::float32,
         );
@@ -125,7 +125,6 @@ class CartPoleEnv extends AbstractEnv
         $this->setObservationSpace(new Box($la,$min,$high));
         $this->setActionSpace(new Discrete($la,2));
 
-        $this->seed();
         $this->viewer = null;
         $this->state = null;
 
@@ -194,18 +193,20 @@ class CartPoleEnv extends AbstractEnv
             $this->steps_beyond_done += 1;
             $reward = 0.0;
         }
-        return [$this->state,$reward, $done, []];
+        $observation = $this->state;
+        $truncated = false;
+        return [$observation, $reward, $done, $truncated, []];
     }
 
     /**
-    * return $observation
+    * return array{NDArray $observation,array<mixed> $info}
     **/
-    protected function doReset() : NDArray
+    protected function doReset() : array
     {
         $la = $this->la;
-        $this->state = $la->randomUniform([4],$low=-0.05, $high=0.05);
+        $this->state = $la->randomUniform([4],$low=-0.05, $high=0.05, seed:$this->rnd->nextInt32()); // (shape,low,high)
         $this->steps_beyond_done = null;
-        return $this->state;
+        return [$this->state,[]];
     }
 
     public function render(?string $mode=null) : mixed

@@ -49,7 +49,8 @@ class MultiarmedBanditTest extends TestCase
 
         // observationSpace
         $obsSpace = $env->observationSpace();
-        $this->assertNull($obsSpace);
+        $this->assertInstanceof(Discrete::class,$obsSpace);
+        $this->assertIsInt($obsSpace->n());
 
         // actionSpace
         $actionSpace = $env->actionSpace();
@@ -63,21 +64,20 @@ class MultiarmedBanditTest extends TestCase
         $this->assertEquals($actionN,$actionSpace->n());
 
         // reset
-        $obs = $env->reset();
+        [$obs,$info] = $env->reset();
         $this->assertEquals(0,$la->scalar($obs));
 
         // step
         $action = $la->array(0,dtype:NDArray::int32);
         $res = $env->step($action);
         $this->assertIsArray($res);
-        $this->assertCount(4,$res);
-        [$obs,$reward,$done,$info] = $res;
+        $this->assertCount(5,$res);
+        [$obs,$reward,$done,$trunc,$info] = $res;
         $this->assertEquals(0,$la->scalar($obs));
         $this->assertIsFloat($reward);
         $this->assertIsBool($done);
+        $this->assertIsBool($trunc);
 
-        // seed
-        $this->assertEquals([12345],$env->seed(12345));
     }
 
     public function testRender()

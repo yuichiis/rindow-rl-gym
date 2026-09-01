@@ -125,9 +125,9 @@ class Viewer
         return $this->isopen;
     }
 
-    public function show(?bool $loop=null,?int $delay=null) : void
+    public function show(?string $path=null,?bool $loop=null,?int $delay=null) : mixed
     {
-        $this->gl->show($loop, $delay);
+        return $this->gl->show(path:$path, loop:$loop, delay:$delay);
     }
 
     # Convenience

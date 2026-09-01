@@ -4,13 +4,17 @@ namespace Rindow\RL\Gym\Core\Spaces;
 use InvalidArgumentException;
 use RuntimeException;
 use Interop\Polite\Math\Matrix\NDArray;
+use Interop\Polite\AI\RL\Spaces\Discrete as DiscreteInterface;
 
-class Discrete extends AbstractSpace
+class Discrete extends AbstractSpace implements DiscreteInterface
 {
     protected int $n;
-    public function __construct(object $la, int $n, ?int $seed=null)
+    public function __construct(object $la, int $n)
     {
-        parent::__construct($la,seed:$seed);
+        parent::__construct($la,
+            shape:[],
+            dtype:NDArray::int32
+        );
         $this->n = $n;
     }
 
@@ -19,21 +23,25 @@ class Discrete extends AbstractSpace
         return $this->n;
     }
 
-    public function sample() : NDArray
+    public function sample() : NDArray|array
     {
         $la = $this->la;
-        $random = $la->array(rand(0,$this->n-1),dtype:NDArray::int32);
+        $random = $la->array($this->rnd->nextInt(0,$this->n-1),dtype:NDArray::int32);
         return $random;
     }
 
-    public function contains(NDArray $x, ?bool $throw=null, ?string $type=null) : bool
+    public function contains(NDArray|array $x, ?bool $throw=null, ?string $type=null) : bool
     {
         $la = $this->la;
+        if(!($x instanceof NDArray)) {
+            $valuetype = gettype($x);
+            throw new InvalidArgumentException("type of $type must be NDArray. $valuetype given.");
+        }
         if($type===null) {
             $type = 'value';
         }
         if(!$la->isInt($x)) {
-            $dtype = $this->dtypeToString($x->dtype());
+            $dtype = $la->dtypeToString($x->dtype());
             throw new InvalidArgumentException("$type must be integer. $dtype given.");
         }
         if($x->size()!=1) {

@@ -6,17 +6,22 @@ use RuntimeException;
 use InvalidArgumentException;
 use Throwable;
 use Interop\Polite\AI\RL\Environment;
+use Interop\Polite\AI\RL\Spaces\Space;
 use Interop\Polite\Math\Matrix\NDArray;
-use Rindow\RL\Gym\Core\Spaces\Space;
 
 abstract class AbstractEnv implements Environment
 {
     /**
-     * {NDArray $observation, float $reward, bool $done, array<string,mixed> $info}
-     * @return array{NDArray, float, bool, array<string,mixed>}
+     * {NDArray $observation, float $reward, bool $done, bool $truncated, array<string,mixed> $info}
+     * @return array{NDArray|array<string,mixed>, float, bool, bool, array<string,mixed>}
      */
     abstract protected function doStep(NDArray $action) : array;
-    abstract protected function doReset() : NDArray;
+
+    /**
+     * {NDArray $observation, array<string,mixed> $info}
+     * @return array{NDArray|array<string,mixed>, array<string,mixed>}
+     */
+    abstract protected function doReset() : array;
 
     protected ?Space $actionSpace = null;
     protected ?Space $observationSpace = null;
@@ -28,10 +33,12 @@ abstract class AbstractEnv implements Environment
     protected ?object $viewer=null;
     /** @var array<string,mixed> $metadata */
     protected array $metadata = [];
+    protected PhpPcg32 $rnd;
 
     public function __construct(object $la)
     {
         $this->la = $la;
+        $this->rnd = new PhpPcg32($this->la->randInt(),$this->la->randInt());
     }
 
     public function maxEpisodeSteps() : int
@@ -63,8 +70,8 @@ abstract class AbstractEnv implements Environment
     }
 
     /**
-     * {NDArray $observation, float $reward, bool $done, array<string,mixed> $info}
-     * @return array{NDArray, float, bool, array<string,mixed>}
+     * {NDArray $observation, float $reward, bool $done, bool $truncated, array<string,mixed> $info}
+     * @return array{NDArray, float, bool, bool, array<string,mixed>}
      */
     public function step(mixed $action) : array
     {
@@ -74,14 +81,16 @@ abstract class AbstractEnv implements Environment
         }
         $this->checkActionSpace($action);
         $results = $this->doStep($action);
-        [$observation,$reward,$done,$info] = $results;
-        if(!$this->checkObsSpace($observation)) {
-            $done = true;
+        [$observation,$reward,$done,$truncated,$info] = $results;
+        if(!($done || $truncated)) {
+            if(!$this->checkObsSpace($observation)) {
+                $truncated = true;
+            }
+            if(!$this->checkEpisodeSteps()) {
+                $truncated = true;
+            }
         }
-        if(!$this->checkEpisodeSteps()) {
-            $done = true;
-        }
-        return [$observation,$reward,$done,$info];
+        return [$observation,$reward,$done,$truncated,$info];
     }
 
     protected function setActionSpace(Space $space) : void
@@ -110,7 +119,10 @@ abstract class AbstractEnv implements Environment
         }
     }
 
-    protected function checkObsSpace(NDArray $observation) : bool
+    /**
+     * @param NDArray|array<string,NDArray> $observation
+     */
+    protected function checkObsSpace(NDArray|array $observation) : bool
     {
         if($this->observationSpace===null) {
             return true;
@@ -125,7 +137,10 @@ abstract class AbstractEnv implements Environment
         return true;
     }
 
-    protected function checkSpace(Space $space, NDArray $value, string $type) : ?string
+    /**
+     * @param NDArray|array<string,NDArray> $value
+     */
+    protected function checkSpace(Space $space, NDArray|array $value, string $type) : ?string
     {
         $la = $this->la;
         try {
@@ -150,9 +165,12 @@ abstract class AbstractEnv implements Environment
     /**
     * return NDArray $observation
     **/
-    public function reset() : mixed
+    public function reset(?int $seed=null) : array
     {
         $this->elapsedSteps = 0;
+        if($seed!==null) {
+            $this->rnd->setSeed($seed);
+        }
         return $this->doReset();
     }
 
@@ -167,13 +185,12 @@ abstract class AbstractEnv implements Environment
     /**
     * return mixed $depends on vender
     */
-    public function show(?bool $loop=null,?int $delay=null) : mixed
+    public function show(?string $path=null,?bool $loop=null,?int $delay=null) : mixed
     {
         if($this->viewer===null) {
             throw new LogicException('Viewer is not ready');
         }
-        $this->viewer->show($loop, $delay);
-        return null;
+        return $this->viewer->show(path:$path, loop:$loop, delay:$delay);
     }
 
     /**
@@ -185,18 +202,6 @@ abstract class AbstractEnv implements Environment
             $this->viewer->close();
             $this->viewer = null;
         }
-    }
-
-    /**
-    * @return array<int> $seeds
-    */
-    public function seed(?int $seed=null) : array
-    {
-        if($seed===null) {
-            $seed = random_int(~PHP_INT_MAX,PHP_INT_MAX);
-        }
-        mt_srand($seed);
-        return [$seed];
     }
 
     protected function remainder(float $x, float $y) : float

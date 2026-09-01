@@ -26,8 +26,9 @@ class Slots extends AbstractEnv
         }
         $this->p = $probabilities;
         foreach ($probabilities as $p) {
-            $this->thresholds[] = (int)floor($p * getrandmax());
+            $this->thresholds[] = (int)floor($p * 0x7FFFFFFF);
         }
+        $this->setObservationSpace(new Discrete($la,1));
         $this->setActionSpace(new Discrete($la,count($this->thresholds)));
         $this->num = count($this->thresholds);
         $this->obs = $la->array(0,dtype:NDArray::int32);
@@ -42,21 +43,23 @@ class Slots extends AbstractEnv
         //    throw new InvalidArgumentException('Invalid action');
         //}
         $threshold = $this->thresholds[$this->la->scalar($action)];
-        if( $threshold > mt_rand()) {
+        if( $threshold > $this->rnd->nextInt(0,0x7FFFFFFF) ) {
             $reward = 1.0;
         } else {
             $reward = 0.0;
         }
-        // [obs, reward, done, info]
-        return [$this->obs,$reward,true,[]];
+        $observation = $this->obs;
+        $done = true;
+        $truncated = false;
+        return [$observation, $reward, $done, $truncated, []];
      }
 
     /**
-    * return $observation
+    * return array{NDArray $observation,array<mixed> $info}
     **/
-    protected function doReset() : NDArray
+    protected function doReset() : array
     {
-        return $this->obs;
+        return [$this->obs,[]];
     }
 
 }

@@ -65,7 +65,7 @@ interface GL
     public function load_image(string $fname) : mixed;
     public function output() : string;
     public function get_image_data() : NDArray;
-    public function show(?bool $loop=null,?int $delay=null) : void;
+    public function show(?string $path=null,?bool $loop=null,?int $delay=null) : mixed;
     public function handler() : mixed;
     public function close() : void;
 }

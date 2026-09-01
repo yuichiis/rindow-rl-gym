@@ -45,7 +45,8 @@ class Image
     public function __destruct()
     {
         if($this->img) {
-            imagedestroy($this->img);
+            // deprecated since 8.5
+            // imagedestroy($this->img);
             $this->img = null;
         }
     }

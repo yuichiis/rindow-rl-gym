@@ -1,7 +1,7 @@
 <?php
-define('COMPOSER_LIBRARY_PATH', getenv('COMPOSER_LIBRARY_PATH'));
-if(COMPOSER_LIBRARY_PATH && file_exists(COMPOSER_LIBRARY_PATH.'/vendor/autoload.php')) {
-    $loader = include COMPOSER_LIBRARY_PATH.'/vendor/autoload.php';
+define('COMPOSER_HOME', getenv('COMPOSER_HOME'));
+if(COMPOSER_HOME && file_exists(COMPOSER_HOME.'/vendor/autoload.php')) {
+    $loader = include COMPOSER_HOME.'/vendor/autoload.php';
 } else {
     throw new \Exception("Loader is not found.");
 }
@@ -13,7 +13,7 @@ $loader->addPsr4('Rindow\\Matlib\\FFI\\', __DIR__.'/../../rindow-matlib-ffi/src'
 $loader->addPsr4('Rindow\\OpenCL\\FFI\\', __DIR__.'/../../rindow-opencl-ffi/src');
 $loader->addPsr4('Rindow\\CLBlast\\FFI\\', __DIR__.'/../../rindow-clblast-ffi/src');
 $loader->addPsr4('Rindow\\Math\\Plot\\', __DIR__.'/../../rindow-math-plot/src');
-$loader->addPsr4('Interop\\Polite\\Math\\', __DIR__.'/../../../interop-phpobjects/polite-math/src');
-$loader->addPsr4('Interop\\Polite\\AI\\', __DIR__.'/../../../interop-phpobjects/polite-ai/src');
+$loader->addPsr4('Interop\\Polite\\Math\\', __DIR__.'/../../polite-math/src');
+$loader->addPsr4('Interop\\Polite\\AI\\', __DIR__.'/../../polite-ai/src');
 
 return $loader;

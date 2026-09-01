@@ -112,19 +112,18 @@ class ContinuousMountainCarEnv extends AbstractEnv
         );
 
         $this->setActionSpace( new Box($la,
-            $this->min_action, $this->max_action, shape:[], dtype:NDArray::float32
+            $this->min_action, $this->max_action, shape:[1], dtype:NDArray::float32
         ));
         $this->setObservationSpace( new Box($la,
             $this->low_state, $this->high_state, dtype:NDArray::float32
         ));
 
-        $this->seed();
     }
 
     protected function doStep(NDArray $action) : array
     {
         $la = $this->la;
-        $action = $la->scalar($action);
+        $action = $la->scalar($la->squeeze($action));
         [$position, $velocity] = $this->state;
         $force = min(max($action, $this->min_action), $this->max_action);
 
@@ -147,27 +146,29 @@ class ContinuousMountainCarEnv extends AbstractEnv
         }
 
         # Convert a possible numpy bool to a Python bool.
-        $done = ($position >= $this->goal_position && $velocity >= $this->goal_velocity);
+        $terminated = ($position >= $this->goal_position && $velocity >= $this->goal_velocity);
 
         $reward = 0;
-        if($done) {
+        if($terminated) {
             $reward = 100.0;
         }
         $reward -= pow($action, 2) * 0.1;
 
         $this->state = $la->array([$position, $velocity], dtype:NDArray::float32);
-        return [$this->state, $reward, $done, []];
+        $observation = $this->state;
+        $truncated = false;
+        return [$observation, $reward, $terminated, $truncated, []];
     }
 
     /**
-    * return $observation
+    * return array{NDArray $observation,array<mixed> $info}
     **/
-    protected function doReset() : NDArray
+    protected function doReset() : array
     {
         $la = $this->la;
-        $position = $la->randomUniform([1],$low=-0.6, $high=-0.4);
-        $this->state = $la->array([$position[0], 0]);
-        return $this->state;
+        $position = $la->randomUniform([1],low:-0.6, high:-0.4, dtype:NDArray::float32, seed:$this->rnd->nextInt32());
+        $this->state = $la->array([$position[0], 0], dtype:NDArray::float32);
+        return [$this->state,[]];
     }
 
     protected function height(float|NDArray $xs) : float|NDArray

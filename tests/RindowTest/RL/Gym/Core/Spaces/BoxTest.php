@@ -42,12 +42,12 @@ class BoxTest extends TestCase
         $this->assertFalse($space->contains($higher));
     }
 
-    public function testNormalArray()
+    public function testNormalWithShape()
     {
         $mo = $this->newMatrixOperator();
         $la = $this->newLa($mo);
 
-        $space = new Box($la,0,4,[2]);
+        $space = new Box($la,0,4,shape:[2]);
         $lowvalue = $la->array([0, 0],dtype:NDArray::float32);
         $highvalue = $la->array([4, 4],dtype:NDArray::float32);
         $lower = $la->array([-0.1, 0.0],dtype:NDArray::float32);
@@ -86,6 +86,50 @@ class BoxTest extends TestCase
         $this->assertFalse($space->contains($higher));
     }
 
+    public function testNormalIntegerNDArray()
+    {
+        $mo = $this->newMatrixOperator();
+        $la = $this->newLa($mo);
+
+        $space = new Box($la,$la->array([0,1],dtype:NDArray::int32),$la->array([4,5],dtype:NDArray::int32));
+        $lowvalue = $la->array([0, 1],dtype:NDArray::int32);
+        $highvalue = $la->array([4, 5],dtype:NDArray::int32);
+        $lower = $la->array([-1, 0],dtype:NDArray::int32);
+        $higher = $la->array([0, 6],dtype:NDArray::int32);
+
+        $this->assertEquals(NDArray::int32, $space->dtype());
+        $this->assertEquals([2],$space->shape());
+        $this->assertEquals([0,1],$space->low()->toArray());
+        $this->assertEquals([4,5],$space->high()->toArray());
+
+        $this->assertTrue($space->contains($lowvalue));
+        $this->assertTrue($space->contains($highvalue));
+        $this->assertFalse($space->contains($lower));
+        $this->assertFalse($space->contains($higher));
+    }
+
+    public function testNormalBoolWithShape()
+    {
+        $mo = $this->newMatrixOperator();
+        $la = $this->newLa($mo);
+
+        $space = new Box($la,shape:[2],dtype:NDArray::bool);
+        $lowvalue = $la->array([false, false],dtype:NDArray::bool);
+        $highvalue = $la->array([true, true],dtype:NDArray::bool);
+        $invalidShape = $la->array([0],dtype:NDArray::bool);
+        $invalidDtype = $la->array([0, 6],dtype:NDArray::int32);
+
+        $this->assertEquals(NDArray::bool, $space->dtype());
+        $this->assertEquals(NDArray::bool, $space->low()->dtype());
+        $this->assertEquals(NDArray::bool, $space->high()->dtype());
+        $this->assertEquals([2],$space->shape());
+        $this->assertEquals([false,false],$space->low()->toArray());
+        $this->assertEquals([true,true],$space->high()->toArray());
+
+        $this->assertTrue($space->contains($lowvalue));
+        $this->assertTrue($space->contains($highvalue));
+    }
+
     public function testSample()
     {
         $mo = $this->newMatrixOperator();
@@ -104,10 +148,10 @@ class BoxTest extends TestCase
         $la = $this->newLa($mo);
 
         $space = new Box($la,$la->array([0,1]),$la->array([4,5]));
-        $lower = $la->array([-0.1, 0.0],dtype:NDArray::float32);
+        $lower = $la->array([-0.125, 0.0],dtype:NDArray::float32);
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('observation(0) is too low.:-0.1');
+        $this->expectExceptionMessage('observation(0) is too low.:-0.125');
         $space->contains($lower, throw:true, type:'observation');
     }
 
@@ -117,10 +161,10 @@ class BoxTest extends TestCase
         $la = $this->newLa($mo);
 
         $space = new Box($la,$la->array([0,1]),$la->array([4,5]));
-        $higher = $la->array([0.0, 5.1],dtype:NDArray::float32);
+        $higher = $la->array([0.0, 5.125],dtype:NDArray::float32);
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('observation(1) is too high.:5.1');
+        $this->expectExceptionMessage('observation(1) is too high.:5.125');
         $space->contains($higher, throw:true, type:'observation');
     }
 

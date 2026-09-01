@@ -118,7 +118,7 @@ class GDGL implements GL
     }
 
     /**
-     * @param array<float> $point
+     * @param array<float|int> $point
      */
     protected function realCoordinate(array $point, ?bool $realMode=null) : NDArray
     {
@@ -519,7 +519,8 @@ class GDGL implements GL
         // rotate original image
         $backcolor = imagecolorallocatealpha($img,0,0,0,127);
         $img = imagerotate($expandedImg,$rotdeg,$backcolor);
-        imagedestroy($expandedImg);
+        // deprecated since 8.5
+        // imagedestroy($expandedImg);
         unset($expandedImg);
         imagealphablending($img,false);
 
@@ -542,7 +543,8 @@ class GDGL implements GL
                 $imgsx,$imgsy
             );
         }
-        imagedestroy($img);
+        // deprecated since 8.5
+        // imagedestroy($img);
     }
 
     public function get_display(mixed $display) : mixed
@@ -639,15 +641,20 @@ class GDGL implements GL
         return $img;
     }
 
-    public function show(?bool $loop=null, ?int $delay=null) : void
+    public function show(?string $path=null,?bool $loop=null, ?int $delay=null) : mixed
     {
         if(count($this->outputFiles)==0) {
             throw new LogicException('Image not found');
         } elseif(count($this->outputFiles)==1) {
             $filename = array_shift($this->outputFiles);
             $this->outputFiles = [];
-            $this->executeGifViewer($filename);
-            return;
+            if($path) {
+                rename($filename,$path);
+                $filename = $path;
+            } else {
+                $this->executeGifViewer($filename);
+            }
+            return $filename;
         }
         if($loop===null) {
             $loop=true;
@@ -655,7 +662,11 @@ class GDGL implements GL
         if($delay===null) {
             $delay=5;
         }
-        $filename = $this->outputFile();
+        if($path) {
+            $filename = $path;
+        } else {
+            $filename = $this->outputFile();
+        }
         if(!($stream=fopen($filename,'wb'))) {
             throw new RuntimeException('animation file open error:'.$filename);
         };
@@ -672,7 +683,10 @@ class GDGL implements GL
             @unlink($fname);
         }
         $this->outputFiles = [];
-        $this->executeGifViewer($filename);
+        if($path===null) {
+            $this->executeGifViewer($filename);
+        }
+        return $filename;
     }
 
     protected function executeGifViewer(string $filename) : void
@@ -693,7 +707,8 @@ class GDGL implements GL
 
     public function close() : void
     {
-        imagedestroy($this->gd);
+        // deprecated since 8.5
+        // imagedestroy($this->gd);
     }
 
     public function currentMatrix() : NDArray
@@ -708,7 +723,6 @@ class GDGL implements GL
 
     protected function outputFile() : string
     {
-        $imagedir = sys_get_temp_dir().'/rindow/rlgym';
         $this->makeDirectory();
         $filename = tempnam($this->imagesDir,'plo');
         rename($filename, $filename.'.gif');
